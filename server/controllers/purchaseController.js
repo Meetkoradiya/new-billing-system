@@ -58,3 +58,29 @@ exports.getAllPurchases = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// Get Purchase By ID
+exports.getPurchaseById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [head] = await db.query(`
+            SELECT p.*, a.name as party_name 
+            FROM purchase_head p 
+            JOIN accounts a ON p.account_id = a.id 
+            WHERE p.id = ?`, [id]
+        );
+
+        if (head.length === 0) return res.status(404).json({ message: 'Purchase not found' });
+
+        const [items] = await db.query(`
+            SELECT d.*, i.name as item_name 
+            FROM purchase_detail d 
+            JOIN items i ON d.item_id = i.id 
+            WHERE d.purchase_id = ?`, [id]
+        );
+
+        res.json({ ...head[0], items });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

@@ -22,6 +22,8 @@ app.use('/api/accounts', accountRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/purchase', purchaseRoutes);
+app.use('/api/reports', require('./routes/reportRoutes'));
+app.use('/api/auth', require('./routes/authRoutes'));
 
 app.get('/', (req, res) => {
     res.send('Agro Billing System API is running...');

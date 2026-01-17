@@ -12,11 +12,11 @@ exports.getAllItems = async (req, res) => {
 
 // Create new item
 exports.createItem = async (req, res) => {
-    const { name, code, sales_rate, purchase_rate, gst_percent, unit } = req.body;
+    const { name, category, code, sales_rate, purchase_rate, gst_percent, unit } = req.body;
     try {
         const [result] = await db.query(
-            'INSERT INTO items (name, code, sales_rate, purchase_rate, gst_percent, unit) VALUES (?, ?, ?, ?, ?, ?)',
-            [name, code, sales_rate, purchase_rate, gst_percent, unit]
+            'INSERT INTO items (name, category, code, sales_rate, purchase_rate, gst_percent, unit) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [name, category, code, sales_rate, purchase_rate, gst_percent, unit]
         );
         res.status(201).json({ id: result.insertId, message: 'Item created' });
     } catch (error) {

@@ -34,7 +34,8 @@ const PartyMaster = () => {
             setFormData({ name: '', group_id: 1, address: '', city: '', mobile: '' });
             fetchAccounts();
         } catch (error) {
-            alert('Error creating account');
+            console.error(error);
+            alert(error.response?.data?.message || 'Error creating account');
         }
     };
 

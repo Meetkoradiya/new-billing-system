@@ -1,6 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getAccounts, getItems, createSale } from '../services/api';
-import { Plus, Trash, Save } from 'lucide-react';
+import { useReactToPrint } from 'react-to-print';
+import SalesPrint from '../components/SalesPrint';
+
+// PrimeReact Imports
+import { Dropdown } from 'primereact/dropdown';
+import { InputText } from 'primereact/inputtext';
+import { InputNumber } from 'primereact/inputnumber';
+import { Button } from 'primereact/button';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { Calendar } from 'primereact/calendar';
+import { Card } from 'primereact/card';
 
 const SalesBill = () => {
     // Master Data
@@ -9,13 +20,17 @@ const SalesBill = () => {
 
     // Form Data
     const [billNo, setBillNo] = useState('');
-    const [billDate, setBillDate] = useState(new Date().toISOString().split('T')[0]);
+    const [billDate, setBillDate] = useState(new Date());
     const [selectedParty, setSelectedParty] = useState('');
     const [remarks, setRemarks] = useState('');
 
+    // Print Data
+    const [printData, setPrintData] = useState(null);
+    const printRef = useRef();
+
     // Grid Data
     const [rows, setRows] = useState([
-        { item_id: '', qty: 1, rate: 0, amount: 0, unit: '' }
+        { id: 1, item_id: '', qty: 1, rate: 0, amount: 0, unit: '', name: '' }
     ]);
 
     useEffect(() => {
@@ -28,7 +43,6 @@ const SalesBill = () => {
             const itemRes = await getItems();
             setParties(accRes.data);
             setProductList(itemRes.data);
-            // Generate simple bill no
             setBillNo(`SB-${Math.floor(Math.random() * 10000)}`);
         } catch (error) {
             console.error('Error loading masters', error);
@@ -41,10 +55,11 @@ const SalesBill = () => {
 
         // Logic for item selection
         if (field === 'item_id') {
-            const item = productList.find(p => p.id === parseInt(value));
+            const item = productList.find(p => p.id === value); // value is id here from Dropdown
             if (item) {
                 newRows[index].rate = item.sales_rate;
                 newRows[index].unit = item.unit;
+                newRows[index].name = item.name;
             }
         }
 
@@ -59,11 +74,11 @@ const SalesBill = () => {
     };
 
     const addRow = () => {
-        setRows([...rows, { item_id: '', qty: 1, rate: 0, amount: 0, unit: '' }]);
+        setRows([...rows, { id: rows.length + 1, item_id: '', qty: 1, rate: 0, amount: 0, unit: '', name: '' }]);
     };
 
-    const removeRow = (index) => {
-        const newRows = rows.filter((_, i) => i !== index);
+    const removeRow = (rowData) => {
+        const newRows = rows.filter(r => r.id !== rowData.id);
         setRows(newRows);
     };
 
@@ -71,136 +86,177 @@ const SalesBill = () => {
         return rows.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
     };
 
+    const handlePrintTrigger = useReactToPrint({
+        content: () => printRef.current,
+    });
+
     const handleSave = async () => {
         if (!selectedParty) return alert('Select Party');
         if (rows.length === 0 || !rows[0].item_id) return alert('Add at least one item');
 
-        const payload = {
-            bill_no: billNo,
-            bill_date: billDate,
-            account_id: selectedParty,
-            remarks,
-            items: rows.filter(r => r.item_id) // Send only valid rows
-        };
-
         try {
+            const total = calculateTotal();
+            const payload = {
+                bill_no: billNo,
+                bill_date: billDate.toISOString().split('T')[0],
+                account_id: selectedParty.id,
+                remarks,
+                items: rows.filter(r => r.item_id).map(r => ({
+                    item_id: r.item_id,
+                    qty: r.qty,
+                    rate: r.rate,
+                    amount: r.amount
+                }))
+            };
+
             await createSale(payload);
-            alert('Bill Saved Successfully!');
-            // Reset
-            setBillNo(`SB-${Math.floor(Math.random() * 10000)}`);
-            setRows([{ item_id: '', qty: 1, rate: 0, amount: 0, unit: '' }]);
-            setRemarks('');
+
+            // Prepare Print Data
+            const printPayload = {
+                bill_no: billNo,
+                bill_date: billDate,
+                party_name: selectedParty.name,
+                items: rows.filter(r => r.item_id).map(r => ({
+                    ...r,
+                    item_name: r.name
+                })),
+                sub_total: total,
+                grand_total: total,
+                remarks
+            };
+            setPrintData(printPayload);
+
+            // Wait for state to update then print
+            setTimeout(() => {
+                const proceed = window.confirm("Bill Saved! Do you want to print?");
+                if (proceed) {
+                    handlePrintTrigger();
+                }
+                // Reset
+                setBillNo(`SB-${Math.floor(Math.random() * 10000)}`);
+                setRows([{ id: 1, item_id: '', qty: 1, rate: 0, amount: 0, unit: '', name: '' }]);
+                setSelectedParty(null);
+            }, 500);
+
         } catch (error) {
             console.error(error);
             alert('Failed to save bill');
         }
     };
 
+    // Table Templates
+    const itemTemplate = (rowData, { rowIndex }) => {
+        return (
+            <Dropdown
+                value={rowData.item_id}
+                options={productList}
+                optionLabel="name"
+                optionValue="id"
+                onChange={(e) => handleRowChange(rowIndex, 'item_id', e.value)}
+                placeholder="Select Item"
+                filter
+                className="w-full"
+            />
+        );
+    };
+
+    const qtyTemplate = (rowData, { rowIndex }) => {
+        return (
+            <InputNumber
+                value={rowData.qty}
+                onValueChange={(e) => handleRowChange(rowIndex, 'qty', e.value)}
+                min={0}
+                mode="decimal"
+                minFractionDigits={0}
+                className="w-full"
+                inputClassName="text-right"
+            />
+        );
+    };
+
+    const rateTemplate = (rowData, { rowIndex }) => {
+        return (
+            <InputNumber
+                value={rowData.rate}
+                onValueChange={(e) => handleRowChange(rowIndex, 'rate', e.value)}
+                min={0}
+                mode="decimal"
+                minFractionDigits={2}
+                className="w-full"
+                inputClassName="text-right"
+            />
+        );
+    };
+
+    const amountTemplate = (rowData) => {
+        return parseFloat(rowData.amount).toFixed(2);
+    };
+
+    const actionTemplate = (rowData) => {
+        return <Button icon="pi pi-trash" rounded text severity="danger" onClick={() => removeRow(rowData)} />;
+    };
+
     return (
-        <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
-                <h2>Sales Invoice</h2>
-                <div>
-                    {/* Date & No */}
-                    <span style={{ marginRight: 15, fontWeight: 'bold' }}>Bill No: {billNo}</span>
-                    <input type="date" value={billDate} onChange={e => setBillDate(e.target.value)} className="form-input" style={{ width: 150, display: 'inline-block' }} />
+        <div className="surface-card p-4 shadow-2 border-round">
+            <h2 className="text-2xl font-bold mb-4">Sales Invoice</h2>
+
+            <div className="grid p-fluid">
+                <div className="col-12 md:col-4">
+                    <label className="block mb-2 font-bold">Bill No</label>
+                    <InputText value={billNo} disabled />
+                </div>
+                <div className="col-12 md:col-4">
+                    <label className="block mb-2 font-bold">Bill Date</label>
+                    <Calendar value={billDate} onChange={(e) => setBillDate(e.value)} showIcon />
+                </div>
+                <div className="col-12 md:col-4">
+                    <label className="block mb-2 font-bold">Farmer Name</label>
+                    <Dropdown
+                        value={selectedParty}
+                        options={parties.filter(p => p.group_id === 1)}
+                        optionLabel="name"
+                        onChange={(e) => setSelectedParty(e.value)}
+                        placeholder="Select Farmer"
+                        filter
+                    />
                 </div>
             </div>
 
-            {/* Header */}
-            <div className="form-group">
-                <label className="form-label">Farmer Name</label>
-                <select
-                    className="form-input"
-                    value={selectedParty}
-                    onChange={e => setSelectedParty(e.target.value)}
-                    style={{ width: '50%' }}
-                >
-                    <option value="">-- Select Farmer --</option>
-                    {parties.filter(p => p.group_id === 1).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
+            <DataTable value={rows} className="mt-4" stripedRows>
+                <Column header="Item Name" body={itemTemplate} style={{ width: '40%' }}></Column>
+                <Column field="unit" header="Unit" style={{ width: '10%' }}></Column>
+                <Column header="Qty" body={qtyTemplate} style={{ width: '15%' }}></Column>
+                <Column header="Rate" body={rateTemplate} style={{ width: '15%' }}></Column>
+                <Column field="amount" header="Amount" body={amountTemplate} className="text-right font-bold" style={{ width: '15%' }}></Column>
+                <Column body={actionTemplate} style={{ width: '5%' }}></Column>
+            </DataTable>
+
+            <div className="flex justify-content-start mt-3">
+                <Button label="Add Item" icon="pi pi-plus" onClick={addRow} severity="secondary" />
             </div>
 
-            {/* Grid */}
-            <table className="data-table" style={{ marginTop: 20 }}>
-                <thead>
-                    <tr>
-                        <th style={{ width: '40%' }}>Item Name</th>
-                        <th style={{ width: '10%' }}>Unit</th>
-                        <th style={{ width: '15%' }} className="text-right">Qty</th>
-                        <th style={{ width: '15%' }} className="text-right">Rate</th>
-                        <th style={{ width: '15%' }} className="text-right">Amount</th>
-                        <th style={{ width: '5%' }}></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {rows.map((row, index) => (
-                        <tr key={index}>
-                            <td>
-                                <select
-                                    className="form-input"
-                                    value={row.item_id}
-                                    onChange={e => handleRowChange(index, 'item_id', e.target.value)}
-                                >
-                                    <option value="">Select Item</option>
-                                    {productList.map(item => (
-                                        <option key={item.id} value={item.id}>{item.name}</option>
-                                    ))}
-                                </select>
-                            </td>
-                            <td>{row.unit}</td>
-                            <td>
-                                <input
-                                    type="number"
-                                    className="form-input text-right"
-                                    value={row.qty}
-                                    onChange={e => handleRowChange(index, 'qty', e.target.value)}
-                                />
-                            </td>
-                            <td>
-                                <input
-                                    type="number"
-                                    className="form-input text-right"
-                                    value={row.rate}
-                                    onChange={e => handleRowChange(index, 'rate', e.target.value)}
-                                />
-                            </td>
-                            <td className="text-right">
-                                {row.amount.toFixed(2)}
-                            </td>
-                            <td className="text-center">
-                                <Trash size={16} color="red" style={{ cursor: 'pointer' }} onClick={() => removeRow(index)} />
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-
-            <div style={{ marginTop: 10 }}>
-                <button className="btn btn-primary" onClick={addRow}><Plus size={14} /> Add Item</button>
+            <div className="flex justify-content-end mt-4">
+                <Card className="w-12 md:w-4 surface-50">
+                    <div className="flex justify-content-between mb-2">
+                        <span className="font-medium">Sub Total:</span>
+                        <span className="font-bold">{calculateTotal().toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-content-between mb-3">
+                        <span className="font-medium">Tax:</span>
+                        <span className="font-bold">0.00</span>
+                    </div>
+                    <div className="flex justify-content-between pt-3 border-top-1 border-300">
+                        <span className="text-xl font-bold">Grand Total:</span>
+                        <span className="text-xl font-bold text-primary">{calculateTotal().toFixed(2)}</span>
+                    </div>
+                    <Button label="Save Bill" icon="pi pi-save" onClick={handleSave} className="w-full mt-3" />
+                </Card>
             </div>
 
-            {/* Footer */}
-            <div style={{ marginTop: 20, borderTop: '1px solid #ddd', paddingTop: 20, display: 'flex', justifyContent: 'flex-end' }}>
-                <div style={{ textAlign: 'right', width: 250 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                        <span>Sub Total:</span>
-                        <b>{calculateTotal().toFixed(2)}</b>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                        <span>Tax:</span>
-                        <b>0.00</b>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 18, borderTop: '2px solid #ccc', paddingTop: 5 }}>
-                        <b>Grand Total:</b>
-                        <b>{calculateTotal().toFixed(2)}</b>
-                    </div>
-                    <button className="btn btn-primary" style={{ width: '100%', marginTop: 15, padding: 10 }} onClick={handleSave}>
-                        <Save size={16} style={{ marginRight: 5 }} /> Save Bill
-                    </button>
-                </div>
+            {/* Hidden Print Component */}
+            <div style={{ display: 'none' }}>
+                <SalesPrint ref={printRef} data={printData} />
             </div>
-
         </div>
     );
 };

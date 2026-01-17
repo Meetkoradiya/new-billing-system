@@ -165,3 +165,18 @@ CREATE INDEX idx_purchase_account ON purchase_head(account_id);
 
 CREATE INDEX idx_sales_return_date ON sales_return_head(return_date);
 CREATE INDEX idx_purchase_return_date ON purchase_return_head(return_date);
+
+-- ===============================
+-- USERS (AUTHENTICATION)
+-- ===============================
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'admin',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Default Admin User (Password: admin123)
+-- In a real app, use bcrypt. For now, simple text or we can use SHA2 helper if available, but simple text for MVP as requested.
+INSERT INTO users (username, password, role) VALUES ('admin', 'admin123', 'admin');

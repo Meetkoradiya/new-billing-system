@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { getItems, createItem } from '../services/api';
-import { Plus } from 'lucide-react';
+// PrimeReact Imports
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
+import { InputText } from 'primereact/inputtext';
+import { InputNumber } from 'primereact/inputnumber';
+import { Dropdown } from 'primereact/dropdown';
 
 const ItemMaster = () => {
     const [items, setItems] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
+        category: '',
         code: '',
         unit: 'Nos',
         purchase_rate: 0,
@@ -27,131 +35,88 @@ const ItemMaster = () => {
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async () => {
         try {
             await createItem(formData);
             setShowForm(false);
-            setFormData({ name: '', code: '', unit: 'Nos', purchase_rate: 0, sales_rate: 0, gst_percent: 0 });
+            setFormData({ name: '', category: '', code: '', unit: 'Nos', purchase_rate: 0, sales_rate: 0, gst_percent: 0 });
             fetchItems();
         } catch (error) {
             alert('Error creating item');
         }
     };
 
-    return (
+    const dialogFooter = (
         <div>
-            <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2>Item Master</h2>
-                <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-                    <Plus size={16} style={{ marginBottom: -3, marginRight: 5 }} />
-                    {showForm ? 'Cancel' : 'Add New Item'}
-                </button>
+            <Button label="Cancel" icon="pi pi-times" onClick={() => setShowForm(false)} className="p-button-text" />
+            <Button label="Save" icon="pi pi-check" onClick={handleSubmit} autoFocus />
+        </div>
+    );
+
+    return (
+        <div className="surface-card p-4 shadow-2 border-round">
+            <div className="flex justify-content-between align-items-center mb-4">
+                <h2 className="text-xl font-bold m-0">Item Master</h2>
+                <Button label="Add New Item" icon="pi pi-plus" onClick={() => setShowForm(true)} />
             </div>
 
-            {showForm && (
-                <div className="card">
-                    <h3>New Product</h3>
-                    <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 15 }}>
-                        <div style={{ gridColumn: 'span 2' }}>
-                            <label className="form-label">Item Name</label>
-                            <input
-                                className="form-input"
-                                value={formData.name}
-                                onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="form-label">Code / SKU</label>
-                            <input
-                                className="form-input"
-                                value={formData.code}
-                                onChange={e => setFormData({ ...formData, code: e.target.value })}
-                            />
-                        </div>
-                        <div>
-                            <label className="form-label">Unit</label>
-                            <select
-                                className="form-input"
-                                value={formData.unit}
-                                onChange={e => setFormData({ ...formData, unit: e.target.value })}
-                            >
-                                <option value="Nos">Nos</option>
-                                <option value="Kg">Kg</option>
-                                <option value="Ltr">Ltr</option>
-                                <option value="Box">Box</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="form-label">Purchase Rate</label>
-                            <input
-                                type="number"
-                                className="form-input text-right"
-                                value={formData.purchase_rate}
-                                onChange={e => setFormData({ ...formData, purchase_rate: e.target.value })}
-                            />
-                        </div>
-                        <div>
-                            <label className="form-label">Sales Rate</label>
-                            <input
-                                type="number"
-                                className="form-input text-right"
-                                value={formData.sales_rate}
-                                onChange={e => setFormData({ ...formData, sales_rate: e.target.value })}
-                            />
-                        </div>
-                        <div>
-                            <label className="form-label">GST %</label>
-                            <select
-                                className="form-input"
-                                value={formData.gst_percent}
-                                onChange={e => setFormData({ ...formData, gst_percent: e.target.value })}
-                            >
-                                <option value="0">0%</option>
-                                <option value="5">5%</option>
-                                <option value="12">12%</option>
-                                <option value="18">18%</option>
-                                <option value="28">28%</option>
-                            </select>
-                        </div>
+            <DataTable value={items} paginator rows={10} stripedRows showGridlines tableStyle={{ minWidth: '50rem' }}>
+                <Column field="code" header="Code" sortable></Column>
+                <Column field="name" header="Item Name" sortable></Column>
+                <Column field="category" header="Category" sortable></Column>
+                <Column field="unit" header="Unit" sortable></Column>
+                <Column field="purchase_rate" header="Pur. Rate" sortable className="text-right"></Column>
+                <Column field="sales_rate" header="Sale Rate" sortable className="text-right"></Column>
+                <Column field="gst_percent" header="GST %" sortable className="text-right" body={(rowData) => `${rowData.gst_percent}%`}></Column>
+            </DataTable>
 
-                        <div style={{ gridColumn: 'span 3', textAlign: 'right' }}>
-                            <button type="submit" className="btn btn-primary">Save Item</button>
-                        </div>
-                    </form>
+            <Dialog header="Add New Product" visible={showForm} style={{ width: '50vw' }} breakpoints={{ '960px': '75vw', '641px': '100vw' }} onHide={() => setShowForm(false)} footer={dialogFooter}>
+                <div className="grid p-fluid">
+                    <div className="col-12 md:col-8">
+                        <label className="block mb-2 font-medium">Item Name</label>
+                        <InputText value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} autoFocus />
+                    </div>
+                    <div className="col-12 md:col-4">
+                        <label className="block mb-2 font-medium">Category</label>
+                        <Dropdown
+                            value={formData.category}
+                            options={['Seeds', 'Pesticides', 'Fertilizers', 'Equipment', 'Others']}
+                            onChange={(e) => setFormData({ ...formData, category: e.value })}
+                            placeholder="Select Category"
+                        />
+                    </div>
+                    <div className="col-12 md:col-4">
+                        <label className="block mb-2 font-medium">Code / SKU</label>
+                        <InputText value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} />
+                    </div>
+                    <div className="col-12 md:col-4">
+                        <label className="block mb-2 font-medium">Unit</label>
+                        <Dropdown
+                            value={formData.unit}
+                            options={['Nos', 'Kg', 'Ltr', 'Box', 'Bag']}
+                            onChange={(e) => setFormData({ ...formData, unit: e.value })}
+                            placeholder="Select Unit"
+                        />
+                    </div>
+                    <div className="col-12 md:col-4">
+                        <label className="block mb-2 font-medium">Purchase Rate</label>
+                        <InputNumber value={formData.purchase_rate} onValueChange={(e) => setFormData({ ...formData, purchase_rate: e.value })} mode="decimal" minFractionDigits={2} />
+                    </div>
+                    <div className="col-12 md:col-4">
+                        <label className="block mb-2 font-medium">Sales Rate</label>
+                        <InputNumber value={formData.sales_rate} onValueChange={(e) => setFormData({ ...formData, sales_rate: e.value })} mode="decimal" minFractionDigits={2} />
+                    </div>
+                    <div className="col-12 md:col-4">
+                        <label className="block mb-2 font-medium">GST %</label>
+                        <Dropdown
+                            value={formData.gst_percent}
+                            options={[0, 5, 12, 18, 28]}
+                            onChange={(e) => setFormData({ ...formData, gst_percent: e.value })}
+                            placeholder="GST %"
+                        />
+                    </div>
                 </div>
-            )}
-
-            <div className="card" style={{ padding: 0 }}>
-                <table className="data-table">
-                    <thead>
-                        <tr>
-                            <th>Code</th>
-                            <th>Item Name</th>
-                            <th>Unit</th>
-                            <th className="text-right">Pur. Rate</th>
-                            <th className="text-right">Sale Rate</th>
-                            <th className="text-right">GST %</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items.map(item => (
-                            <tr key={item.id}>
-                                <td>{item.code}</td>
-                                <td>{item.name}</td>
-                                <td>{item.unit}</td>
-                                <td className="text-right">{item.purchase_rate}</td>
-                                <td className="text-right">{item.sales_rate}</td>
-                                <td className="text-right">{item.gst_percent}%</td>
-                            </tr>
-                        ))}
-                        {items.length === 0 && (
-                            <tr><td colSpan="6" className="text-center">No items found.</td></tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+            </Dialog>
         </div>
     );
 };

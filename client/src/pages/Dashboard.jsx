@@ -3,13 +3,13 @@ import { getItems, getAccounts, getSales } from '../services/api';
 import { Users, Package, FileText, TrendingUp } from 'lucide-react';
 
 const StatCard = ({ title, count, icon: Icon, color }) => (
-    <div className="card" style={{ display: 'flex', alignItems: 'center', minWidth: 200, flex: 1, margin: '0 10px 0 0' }}>
-        <div style={{ backgroundColor: color + '20', padding: 15, borderRadius: '50%', marginRight: 15 }}>
+    <div className="surface-card shadow-2 p-3 border-round h-full flex align-items-center">
+        <div className="flex align-items-center justify-content-center border-circle mr-3" style={{ width: '3rem', height: '3rem', backgroundColor: color + '20' }}>
             <Icon size={24} color={color} />
         </div>
         <div>
-            <div style={{ fontSize: 13, color: '#666' }}>{title}</div>
-            <div style={{ fontSize: 24, fontWeight: 'bold' }}>{count}</div>
+            <div className="text-500 font-medium mb-1">{title}</div>
+            <div className="text-900 font-bold text-2xl">{count}</div>
         </div>
     </div>
 );
@@ -49,20 +49,34 @@ const Dashboard = () => {
 
     return (
         <div>
-            <h2>Dashboard</h2>
-            <div style={{ display: 'flex', marginTop: 20, marginBottom: 20 }}>
-                <StatCard title="Total Parties" count={counts.accounts} icon={Users} color="#0078d4" />
-                <StatCard title="Total Products" count={counts.items} icon={Package} color="#107c10" />
-                <StatCard title="Total Invoices" count={counts.sales} icon={FileText} color="#d83b01" />
-                <StatCard title="Total Revenue" count={`₹${counts.totalRevenue.toFixed(0)}`} icon={TrendingUp} color="#8764b8" />
+            <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
+            <div className="grid">
+                <div className="col-12 md:col-6 lg:col-3">
+                    <StatCard title="Total Parties" count={counts.accounts} icon={Users} color="#0078d4" />
+                </div>
+                <div className="col-12 md:col-6 lg:col-3">
+                    <StatCard title="Total Products" count={counts.items} icon={Package} color="#107c10" />
+                </div>
+                <div className="col-12 md:col-6 lg:col-3">
+                    <StatCard title="Total Invoices" count={counts.sales} icon={FileText} color="#d83b01" />
+                </div>
+                <div className="col-12 md:col-6 lg:col-3">
+                    <StatCard title="Total Revenue" count={`₹${counts.totalRevenue.toFixed(0)}`} icon={TrendingUp} color="#8764b8" />
+                </div>
             </div>
 
-            <div className="card">
-                <h3>Quick Actions</h3>
-                <div style={{ display: 'flex', gap: 10, marginTop: 15 }}>
-                    <a href="/sales" className="btn btn-primary">New Sales Bill</a>
-                    <a href="/parties" className="btn btn-primary" style={{ background: '#107c10' }}>Add Customer</a>
-                    <a href="/items" className="btn btn-primary" style={{ background: '#d83b01' }}>Add Product</a>
+            <div className="surface-card shadow-2 p-4 border-round mt-4">
+                <h3 className="text-xl font-medium mb-3">Quick Actions</h3>
+                <div className="flex gap-2">
+                    <a href="/sales" className="p-button p-component no-underline">
+                        <span className="p-button-label p-c">New Sales Bill</span>
+                    </a>
+                    <a href="/parties" className="p-button p-component p-button-success no-underline">
+                        <span className="p-button-label p-c">Add Customer</span>
+                    </a>
+                    <a href="/items" className="p-button p-component p-button-warning no-underline">
+                        <span className="p-button-label p-c">Add Product</span>
+                    </a>
                 </div>
             </div>
         </div>

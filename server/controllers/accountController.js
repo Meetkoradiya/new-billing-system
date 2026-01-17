@@ -16,10 +16,11 @@ exports.createAccount = async (req, res) => {
     try {
         const [result] = await db.query(
             'INSERT INTO accounts (name, group_id, address, city, mobile, gst_number) VALUES (?, ?, ?, ?, ?, ?)',
-            [name, group_id, address, city, mobile, gst_number]
+            [name, group_id, address, city, mobile, gst_number || null]
         );
         res.status(201).json({ id: result.insertId, message: 'Account created' });
     } catch (error) {
+        console.error('Error creating account:', error);
         res.status(500).json({ message: error.message });
     }
 };
