@@ -58,7 +58,7 @@ const LoginPage = ({ setAuth }) => {
                 style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)' }}>
 
                 <div className="text-center mb-5">
-                    <div className="text-primary text-4xl font-bold mb-2">Purasthe Agro</div>
+                    <div className="text-primary text-4xl font-bold mb-2">Purusath Agro</div>
                     <div className="text-600 font-medium">Billing System</div>
                 </div>
 
@@ -100,7 +100,7 @@ const LoginPage = ({ setAuth }) => {
             </div>
 
             <div className="absolute bottom-0 w-full text-center pb-4 text-white-alpha-70 font-medium">
-                &copy; 2026 Purasthe Agro Center
+                &copy; 2026 Purusath Agro Center
             </div>
         </div>
     );

@@ -12,6 +12,7 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Calendar } from 'primereact/calendar';
 import { Card } from 'primereact/card';
+import { Toast } from 'primereact/toast';
 
 const SalesBill = () => {
     // Master Data
@@ -21,12 +22,13 @@ const SalesBill = () => {
     // Form Data
     const [billNo, setBillNo] = useState('');
     const [billDate, setBillDate] = useState(new Date());
-    const [selectedParty, setSelectedParty] = useState('');
+    const [selectedParty, setSelectedParty] = useState(null);
     const [remarks, setRemarks] = useState('');
 
     // Print Data
     const [printData, setPrintData] = useState(null);
     const printRef = useRef();
+    const toast = useRef(null);
 
     // Grid Data
     const [rows, setRows] = useState([
@@ -90,9 +92,38 @@ const SalesBill = () => {
         content: () => printRef.current,
     });
 
+    const handleDownloadPdf = async () => {
+        if (!printData) return alert('Save the bill first to download PDF');
+
+        try {
+            const html2canvas = (await import('html2canvas')).default;
+            const jsPDF = (await import('jspdf')).default;
+
+            const element = printRef.current;
+            const canvas = await html2canvas(element, { scale: 2 });
+            const imgData = canvas.toDataURL('image/png');
+
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`Invoice_${billNo}.pdf`);
+        } catch (error) {
+            console.error('PDF Download Error:', error);
+            alert('Failed to download PDF');
+        }
+    };
+
     const handleSave = async () => {
-        if (!selectedParty) return alert('Select Party');
-        if (rows.length === 0 || !rows[0].item_id) return alert('Add at least one item');
+        if (!selectedParty) {
+            toast.current.show({ severity: 'warn', summary: 'Missing Info', detail: 'Select Farmer / Party' });
+            return;
+        }
+        if (rows.length === 0 || !rows[0].item_id) {
+            toast.current.show({ severity: 'warn', summary: 'Missing Info', detail: 'Add at least one item' });
+            return;
+        }
 
         try {
             const total = calculateTotal();
@@ -125,6 +156,7 @@ const SalesBill = () => {
                 remarks
             };
             setPrintData(printPayload);
+            toast.current.show({ severity: 'success', summary: 'Success', detail: 'Sales Bill Saved!' });
 
             // Wait for state to update then print
             setTimeout(() => {
@@ -140,7 +172,7 @@ const SalesBill = () => {
 
         } catch (error) {
             console.error(error);
-            alert('Failed to save bill');
+            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Failed to save bill' });
         }
     };
 
@@ -198,6 +230,7 @@ const SalesBill = () => {
 
     return (
         <div className="surface-card p-4 shadow-2 border-round">
+            <Toast ref={toast} />
             <h2 className="text-2xl font-bold mb-4">Sales Invoice</h2>
 
             <div className="grid p-fluid">
@@ -222,13 +255,13 @@ const SalesBill = () => {
                 </div>
             </div>
 
-            <DataTable value={rows} className="mt-4" stripedRows>
-                <Column header="Item Name" body={itemTemplate} style={{ width: '40%' }}></Column>
-                <Column field="unit" header="Unit" style={{ width: '10%' }}></Column>
-                <Column header="Qty" body={qtyTemplate} style={{ width: '15%' }}></Column>
-                <Column header="Rate" body={rateTemplate} style={{ width: '15%' }}></Column>
-                <Column field="amount" header="Amount" body={amountTemplate} className="text-right font-bold" style={{ width: '15%' }}></Column>
-                <Column body={actionTemplate} style={{ width: '5%' }}></Column>
+            <DataTable value={rows} className="mt-4" stripedRows scrollable>
+                <Column header="Item Name" body={itemTemplate} style={{ minWidth: '200px' }}></Column>
+                <Column field="unit" header="Unit" style={{ minWidth: '80px' }}></Column>
+                <Column header="Qty" body={qtyTemplate} style={{ minWidth: '100px' }}></Column>
+                <Column header="Rate" body={rateTemplate} style={{ minWidth: '100px' }}></Column>
+                <Column field="amount" header="Amount" body={amountTemplate} className="text-right font-bold" style={{ minWidth: '100px' }}></Column>
+                <Column body={actionTemplate} style={{ width: '50px' }}></Column>
             </DataTable>
 
             <div className="flex justify-content-start mt-3">
@@ -249,7 +282,10 @@ const SalesBill = () => {
                         <span className="text-xl font-bold">Grand Total:</span>
                         <span className="text-xl font-bold text-primary">{calculateTotal().toFixed(2)}</span>
                     </div>
-                    <Button label="Save Bill" icon="pi pi-save" onClick={handleSave} className="w-full mt-3" />
+                    <div className="flex gap-2 mt-3">
+                        <Button label="Save & Print" icon="pi pi-print" onClick={handleSave} className="flex-1" />
+                        <Button label="Download PDF" icon="pi pi-download" onClick={handleDownloadPdf} severity="secondary" className="flex-1" disabled={!printData} />
+                    </div>
                 </Card>
             </div>
 

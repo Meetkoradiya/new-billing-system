@@ -36,8 +36,8 @@ exports.createSale = async (req, res) => {
                 'INSERT INTO sales_detail (sales_id, item_id, qty, rate, amount) VALUES (?, ?, ?, ?, ?)',
                 [sales_id, d.item_id, d.qty, d.rate, d.amount]
             );
-            // Optional: Update Stock
-            // await connection.query('UPDATE items SET stock = stock - ? WHERE id = ?', [d.qty, d.item_id]);
+            // Stock Update: Decrease on Sale
+            await connection.query('UPDATE items SET stock = stock - ? WHERE id = ?', [d.qty, d.item_id]);
         }
 
         await connection.commit();

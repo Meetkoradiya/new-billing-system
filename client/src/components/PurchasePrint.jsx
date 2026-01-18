@@ -10,9 +10,9 @@ const PurchasePrint = React.forwardRef(({ settings, data }, ref) => {
         <div ref={ref} className="print-container" style={{ padding: '40px', fontFamily: 'Arial, sans-serif', color: '#000', backgroundColor: '#fff' }}>
             {/* Header */}
             <div style={{ textAlign: 'center', borderBottom: '2px solid #000', paddingBottom: '20px', marginBottom: '20px' }}>
-                <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold' }}>PURASTHE AGRO CENTER</h1>
+                <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold' }}>PURUSATH AGRO CENTER</h1>
                 <p style={{ margin: '5px 0', fontSize: '14px' }}>Main Market Yard, Shop No. 12, Amreli - 365601</p>
-                <p style={{ margin: '5px 0', fontSize: '14px' }}>Mo: +91 98765 43210 | Email: contact@purastheagro.com</p>
+                <p style={{ margin: '5px 0', fontSize: '14px' }}>Mo: +91 98765 43210 | Email: contact@purusathagro.com</p>
             </div>
 
             {/* Bill Info */}
@@ -66,7 +66,7 @@ const PurchasePrint = React.forwardRef(({ settings, data }, ref) => {
                     <p>Receiver's Signature</p>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                    <p>For, Purasthe Agro Center</p>
+                    <p>For, Purusath Agro Center</p>
                     <br /><br />
                     <p>_______________________</p>
                     <p>Authorised Signatory</p>

@@ -1,17 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { getAccounts, createAccount } from '../services/api';
-import { Plus, Search } from 'lucide-react';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
+import { InputText } from 'primereact/inputtext';
+import { Dropdown } from 'primereact/dropdown';
+import { Toast } from 'primereact/toast';
+import { Tag } from 'primereact/tag';
 
 const PartyMaster = () => {
     const [accounts, setAccounts] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
-        group_id: 1, // Default to Sundry Debtors
+        group_id: 1, // Default to Farmer
         address: '',
         city: '',
         mobile: ''
     });
+    const toast = useRef(null);
 
     useEffect(() => {
         fetchAccounts();
@@ -26,117 +34,84 @@ const PartyMaster = () => {
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async () => {
+        if (!formData.name) {
+            toast.current.show({ severity: 'warn', summary: 'Warning', detail: 'Name is required' });
+            return;
+        }
+
         try {
             await createAccount(formData);
+            toast.current.show({ severity: 'success', summary: 'Success', detail: 'Account Created Successfully' });
             setShowForm(false);
             setFormData({ name: '', group_id: 1, address: '', city: '', mobile: '' });
             fetchAccounts();
         } catch (error) {
             console.error(error);
-            alert(error.response?.data?.message || 'Error creating account');
+            const msg = error.response?.data?.message || 'Error creating account';
+            toast.current.show({ severity: 'error', summary: 'Error', detail: msg });
         }
     };
 
-    return (
+    const dialogFooter = (
         <div>
-            <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2>Farmers / Parties</h2>
-                <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-                    <Plus size={16} style={{ marginBottom: -3, marginRight: 5 }} />
-                    {showForm ? 'Cancel' : 'Add New Farmer'}
-                </button>
+            <Button label="Cancel" icon="pi pi-times" onClick={() => setShowForm(false)} className="p-button-text" />
+            <Button label="Save" icon="pi pi-check" onClick={handleSubmit} autoFocus />
+        </div>
+    );
+
+    const typeBodyTemplate = (rowData) => {
+        return rowData.group_id === 1 ?
+            <Tag severity="success" value="Farmer" /> :
+            <Tag severity="info" value="Company" />;
+    };
+
+    return (
+        <div className="surface-card p-4 shadow-2 border-round">
+            <Toast ref={toast} />
+            <div className="flex justify-content-between align-items-center mb-4">
+                <h2 className="text-xl font-bold m-0">Farmers / Companies List</h2>
+                <Button label="Add New Account" icon="pi pi-plus" onClick={() => setShowForm(true)} />
             </div>
 
-            {showForm && (
-                <div className="card">
-                    <h3>New Farmer / Account</h3>
-                    <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 }}>
-                        <div>
-                            <label className="form-label">Farmer Name / Party Name</label>
-                            <input
-                                className="form-input"
-                                value={formData.name}
-                                onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="form-label">City / Village</label>
-                            <input
-                                className="form-input"
-                                value={formData.city}
-                                onChange={e => setFormData({ ...formData, city: e.target.value })}
-                            />
-                        </div>
-                        <div>
-                            <label className="form-label">Type</label>
-                            <select
-                                className="form-input"
-                                value={formData.group_id}
-                                onChange={e => setFormData({ ...formData, group_id: e.target.value })}
-                            >
-                                <option value="1">Farmer (Debtor)</option>
-                                <option value="2">Supplier (Creditor)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="form-label">Mobile</label>
-                            <input
-                                className="form-input"
-                                value={formData.mobile}
-                                onChange={e => setFormData({ ...formData, mobile: e.target.value })}
-                            />
-                        </div>
-                        <div style={{ gridColumn: 'span 2' }}>
-                            <label className="form-label">Address</label>
-                            <input
-                                className="form-input"
-                                value={formData.address}
-                                onChange={e => setFormData({ ...formData, address: e.target.value })}
-                            />
-                        </div>
+            <DataTable value={accounts} paginator rows={10} stripedRows showGridlines tableStyle={{ minWidth: '50rem' }}>
+                <Column field="id" header="ID" sortable style={{ width: '5%' }}></Column>
+                <Column field="name" header="Name" sortable></Column>
+                <Column field="group_id" header="Type" body={typeBodyTemplate} sortable></Column>
+                <Column field="city" header="City / Village" sortable></Column>
+                <Column field="mobile" header="Mobile" sortable></Column>
+                <Column field="address" header="Address"></Column>
+            </DataTable>
 
-                        <div style={{ gridColumn: 'span 2', textAlign: 'right' }}>
-                            <button type="submit" className="btn btn-primary">Save Account</button>
-                        </div>
-                    </form>
+            <Dialog header="New Account Entry" visible={showForm} style={{ width: '50vw' }} breakpoints={{ '960px': '75vw', '641px': '100vw' }} onHide={() => setShowForm(false)} footer={dialogFooter}>
+                <div className="grid p-fluid">
+                    <div className="col-12 md:col-6">
+                        <label className="block mb-2 font-medium">Name</label>
+                        <InputText value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} autoFocus placeholder="Enter Name..." />
+                    </div>
+                    <div className="col-12 md:col-6">
+                        <label className="block mb-2 font-medium">Type</label>
+                        <Dropdown
+                            value={formData.group_id}
+                            options={[{ label: 'Farmer', value: 1 }, { label: 'Company / Supplier', value: 2 }]}
+                            onChange={(e) => setFormData({ ...formData, group_id: e.value })}
+                            placeholder="Select Type"
+                        />
+                    </div>
+                    <div className="col-12 md:col-6">
+                        <label className="block mb-2 font-medium">City / Village</label>
+                        <InputText value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
+                    </div>
+                    <div className="col-12 md:col-6">
+                        <label className="block mb-2 font-medium">Mobile</label>
+                        <InputText keyfilter="int" value={formData.mobile} onChange={(e) => setFormData({ ...formData, mobile: e.target.value })} />
+                    </div>
+                    <div className="col-12">
+                        <label className="block mb-2 font-medium">Address</label>
+                        <InputText value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
+                    </div>
                 </div>
-            )}
-
-            <div className="card" style={{ padding: 0 }}>
-                <table className="data-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Type</th>
-                            <th>City / Village</th>
-                            <th>Mobile</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {accounts.map(acc => (
-                            <tr key={acc.id}>
-                                <td>{acc.id}</td>
-                                <td>{acc.name}</td>
-                                <td>
-                                    {acc.group_id === 1 ?
-                                        <span className="badge badge-success">Farmer</span> :
-                                        <span className="badge badge-info">Supplier</span>
-                                    }
-                                </td>
-                                <td>{acc.city}</td>
-                                <td>{acc.mobile}</td>
-                            </tr>
-                        ))}
-                        {accounts.length === 0 && (
-                            <tr><td colSpan="5" className="text-center">No accounts found.</td></tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+            </Dialog>
         </div>
     );
 };

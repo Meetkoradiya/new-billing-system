@@ -24,9 +24,14 @@ CREATE TABLE accounts (
 -- ===============================
 CREATE TABLE items (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    item_name VARCHAR(150) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    category VARCHAR(50) DEFAULT 'Pesticide',
+    code VARCHAR(50),
     unit VARCHAR(20),
-    rate DECIMAL(15,2) DEFAULT 0.00,
+    purchase_rate DECIMAL(15,2) DEFAULT 0.00,
+    sales_rate DECIMAL(15,2) DEFAULT 0.00,
+    gst_percent DECIMAL(5,2) DEFAULT 0.00,
+    stock DECIMAL(15,2) DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 

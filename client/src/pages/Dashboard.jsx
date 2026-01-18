@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { getItems, getAccounts, getSales } from '../services/api';
-import { Users, Package, FileText, TrendingUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from 'primereact/button';
+import { Card } from 'primereact/card';
 
-const StatCard = ({ title, count, icon: Icon, color }) => (
+const StatCard = ({ title, count, icon, color }) => (
     <div className="surface-card shadow-2 p-3 border-round h-full flex align-items-center">
         <div className="flex align-items-center justify-content-center border-circle mr-3" style={{ width: '3rem', height: '3rem', backgroundColor: color + '20' }}>
-            <Icon size={24} color={color} />
+            <i className={`pi ${icon} text-xl`} style={{ color: color }}></i>
         </div>
         <div>
             <div className="text-500 font-medium mb-1">{title}</div>
@@ -48,35 +50,37 @@ const Dashboard = () => {
     };
 
     return (
-        <div>
-            <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
+        <div className="surface-ground">
             <div className="grid">
                 <div className="col-12 md:col-6 lg:col-3">
-                    <StatCard title="Total Parties" count={counts.accounts} icon={Users} color="#0078d4" />
+                    <StatCard title="Total Parties" count={counts.accounts} icon="pi-users" color="#0078d4" />
                 </div>
                 <div className="col-12 md:col-6 lg:col-3">
-                    <StatCard title="Total Products" count={counts.items} icon={Package} color="#107c10" />
+                    <StatCard title="Total Products" count={counts.items} icon="pi-box" color="#107c10" />
                 </div>
                 <div className="col-12 md:col-6 lg:col-3">
-                    <StatCard title="Total Invoices" count={counts.sales} icon={FileText} color="#d83b01" />
+                    <StatCard title="Total Invoices" count={counts.sales} icon="pi-file" color="#d83b01" />
                 </div>
                 <div className="col-12 md:col-6 lg:col-3">
-                    <StatCard title="Total Revenue" count={`₹${counts.totalRevenue.toFixed(0)}`} icon={TrendingUp} color="#8764b8" />
+                    <StatCard title="Total Revenue" count={`₹${counts.totalRevenue.toLocaleString('en-IN')}`} icon="pi-chart-line" color="#8764b8" />
                 </div>
             </div>
 
             <div className="surface-card shadow-2 p-4 border-round mt-4">
-                <h3 className="text-xl font-medium mb-3">Quick Actions</h3>
-                <div className="flex gap-2">
-                    <a href="/sales" className="p-button p-component no-underline">
-                        <span className="p-button-label p-c">New Sales Bill</span>
-                    </a>
-                    <a href="/parties" className="p-button p-component p-button-success no-underline">
-                        <span className="p-button-label p-c">Add Customer</span>
-                    </a>
-                    <a href="/items" className="p-button p-component p-button-warning no-underline">
-                        <span className="p-button-label p-c">Add Product</span>
-                    </a>
+                <h3 className="text-xl font-medium mb-4">Quick Actions</h3>
+                <div className="flex flex-wrap gap-3">
+                    <Link to="/sales">
+                        <Button label="New Sales Bill" icon="pi pi-plus" size="large" />
+                    </Link>
+                    <Link to="/parties">
+                        <Button label="Add Farmer/Company" icon="pi pi-user-plus" severity="success" size="large" />
+                    </Link>
+                    <Link to="/items">
+                        <Button label="Add Product" icon="pi pi-box" severity="warning" size="large" />
+                    </Link>
+                    <Link to="/purchase">
+                        <Button label="Purchase Entry" icon="pi pi-shopping-cart" severity="help" size="large" />
+                    </Link>
                 </div>
             </div>
         </div>

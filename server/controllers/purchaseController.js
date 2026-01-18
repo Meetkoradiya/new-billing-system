@@ -29,8 +29,8 @@ exports.createPurchase = async (req, res) => {
                 'INSERT INTO purchase_detail (purchase_id, item_id, qty, rate, amount) VALUES (?, ?, ?, ?, ?)',
                 [purchase_id, d.item_id, d.qty, d.rate, d.amount]
             );
-            // Optional: Increase Stock
-            // await connection.query('UPDATE items SET stock = stock + ? WHERE id = ?', [d.qty, d.item_id]);
+            // Stock Update: Increase on Purchase
+            await connection.query('UPDATE items SET stock = stock + ? WHERE id = ?', [d.qty, d.item_id]);
         }
 
         await connection.commit();
