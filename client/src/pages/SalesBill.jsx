@@ -34,13 +34,19 @@ const SalesBill = () => {
 
     // Quick Add Item State
     const [showQuickAdd, setShowQuickAdd] = useState(false);
-    const [newItem, setNewItem] = useState({ name: '', unit: 'Nos', sales_rate: 0, purchase_rate: 0, stock: 0 });
+    const [newItem, setNewItem] = useState({ name: '', company: '', unit: 'Nos', sales_rate: 0, purchase_rate: 0, stock: 0 });
     const [activeRowIndex, setActiveRowIndex] = useState(null);
 
     // Grid Data
     const [rows, setRows] = useState([
         { id: 1, item_id: '', qty: 1, rate: 0, amount: 0, unit: '', name: '' }
     ]);
+
+    // Derived options for dropdown
+    const itemOptions = productList.map(p => ({
+        ...p,
+        label: p.company ? `${p.name} (${p.company})` : p.name
+    }));
 
     useEffect(() => {
         loadMasters();
@@ -61,7 +67,7 @@ const SalesBill = () => {
 
         try {
             const itemRes = await getItems();
-            console.log("Items API Response (Full Data):", JSON.stringify(itemRes.data, null, 2));
+
             if (Array.isArray(itemRes.data)) {
                 setProductList(itemRes.data);
                 if (itemRes.data.length === 0) {
@@ -77,33 +83,35 @@ const SalesBill = () => {
             toast.current.show({ severity: 'error', summary: 'Error', detail: 'Failed to load items' });
         }
 
-        if (!billNo) setBillNo(`SB-${Math.floor(Math.random() * 10000)}`);
+        if (!billNo) setBillNo(`SB-${Date.now()}`);
     };
 
     const handleRowChange = (index, field, value) => {
         const newRows = [...rows];
-        newRows[index][field] = value;
 
-        // Logic for item selection
         if (field === 'item_id') {
-            const item = productList.find(p => p.id === value); // value is id here from Dropdown
-            if (item) {
-                // Use sales_rate if available, otherwise purchase_rate or 0
-                newRows[index].rate = item.sales_rate || item.purchase_rate || 0;
-                newRows[index].unit = item.unit;
-                newRows[index].name = item.name;
+            if (value && typeof value === 'object') {
+                // Item Selected from List (Object)
+                newRows[index].item_id = value.id;
+                newRows[index].name = value.name;
+                newRows[index].company = value.company;
+                newRows[index].unit = value.unit;
+                newRows[index].rate = value.sales_rate || value.purchase_rate || 0;
             } else {
-                // Custom Item Typed
-                newRows[index].name = value;
+                // Custom Typed Value (String), or cleared
+                // If it's a string, we treat it as a custom name.
+                newRows[index].item_id = '';
+                newRows[index].name = value || '';
+                newRows[index].company = '';
             }
+        } else {
+            newRows[index][field] = value;
         }
 
         // Calc Amount
-        if (field === 'qty' || field === 'rate' || field === 'item_id') {
-            const qty = parseFloat(newRows[index].qty) || 0;
-            const rate = parseFloat(newRows[index].rate) || 0;
-            newRows[index].amount = qty * rate;
-        }
+        const qty = parseFloat(newRows[index].qty) || 0;
+        const rate = parseFloat(newRows[index].rate) || 0;
+        newRows[index].amount = qty * rate;
 
         setRows(newRows);
     };
@@ -144,7 +152,7 @@ const SalesBill = () => {
             pdf.save(`Invoice_${billNo}.pdf`);
         } catch (error) {
             console.error('PDF Download Error:', error);
-            alert('Failed to download PDF');
+            alert(`Failed to download PDF: ${error.message}`);
         }
     };
 
@@ -153,7 +161,8 @@ const SalesBill = () => {
             toast.current.show({ severity: 'warn', summary: 'Missing Info', detail: 'Select Farmer / Party' });
             return;
         }
-        if (rows.length === 0 || !rows[0].item_id) {
+        const validItems = rows.filter(r => r.item_id);
+        if (validItems.length === 0) {
             toast.current.show({ severity: 'warn', summary: 'Missing Info', detail: 'Add at least one item' });
             return;
         }
@@ -166,7 +175,7 @@ const SalesBill = () => {
                 account_id: selectedParty.id,
                 payment_mode: paymentMode,
                 remarks,
-                items: rows.filter(r => r.item_id).map(r => ({
+                items: validItems.map(r => ({
                     item_id: r.item_id,
                     qty: r.qty,
                     rate: r.rate,
@@ -182,9 +191,9 @@ const SalesBill = () => {
                 bill_date: billDate,
                 party_name: selectedParty.name,
                 payment_mode: paymentMode,
-                items: rows.filter(r => r.item_id).map(r => ({
+                items: validItems.map(r => ({
                     ...r,
-                    item_name: r.name
+                    item_name: r.company ? `${r.name} (${r.company})` : r.name
                 })),
                 sub_total: total,
                 grand_total: total,
@@ -200,7 +209,7 @@ const SalesBill = () => {
                     handlePrintTrigger();
                 }
                 // Reset
-                setBillNo(`SB-${Math.floor(Math.random() * 10000)}`);
+                setBillNo(`SB-${Date.now()}`); // Use Timestamp to avoid duplicates
                 setRows([{ id: 1, item_id: '', qty: 1, rate: 0, amount: 0, unit: '', name: '' }]);
                 setSelectedParty(null);
                 setPaymentMode('Cash');
@@ -208,7 +217,8 @@ const SalesBill = () => {
 
         } catch (error) {
             console.error(error);
-            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Failed to save bill' });
+            const msg = error.response?.data?.message || 'Failed to save bill';
+            toast.current.show({ severity: 'error', summary: 'Error', detail: msg });
         }
     };
 
@@ -249,12 +259,13 @@ const SalesBill = () => {
             const row = updatedRows[targetIndex];
             row.item_id = newId;
             row.name = addedItem.name;
+            row.company = addedItem.company;
             row.unit = addedItem.unit;
             row.rate = parseFloat(addedItem.sales_rate) || 0;
             row.amount = (parseFloat(row.qty) || 0) * row.rate;
             setRows(updatedRows);
 
-            setNewItem({ name: '', unit: 'Nos', sales_rate: 0, purchase_rate: 0, stock: 0 });
+            setNewItem({ name: '', company: '', unit: 'Nos', sales_rate: 0, purchase_rate: 0, stock: 0 });
             // Background refresh to ensure consistency
             loadMasters();
         } catch (error) {
@@ -268,15 +279,26 @@ const SalesBill = () => {
     const itemTemplate = (rowData, { rowIndex }) => {
         return (
             <Dropdown
-                value={rowData.item_id}
-                options={productList}
-                optionLabel="name"
-                optionValue="id"
-                itemTemplate={(option) => <div><span className="font-bold mr-2">[{option.code}]</span>{option.name} <span className="text-secondary text-sm ml-2">(Stock: {option.stock || 0})</span></div>}
+                id={`item_${rowIndex}`}
+                inputId={`item_input_${rowIndex}`}
+                name={`item_${rowIndex}`}
+                aria-label="Select Item"
+                value={itemOptions.find(p => p.id === rowData.item_id)?.label || rowData.name}
+                options={itemOptions}
+                optionLabel="label"
+                itemTemplate={(option) => (
+                    <div className="flex align-items-center">
+                        <span className="font-bold mr-2">[{option.code}]</span>
+                        <span className="mr-2">{option.name}</span>
+                        {option.company && <span className="text-600 text-sm mr-2">({option.company})</span>}
+                        <span className="text-secondary text-sm ml-auto">(Stock: {option.stock || 0})</span>
+                    </div>
+                )}
                 onChange={(e) => handleRowChange(rowIndex, 'item_id', e.value)}
                 placeholder="Select Item"
                 filter
-                filterBy="name,code"
+                filterBy="name,code,company,label"
+                editable
                 className="w-full"
                 appendTo={document.body}
                 emptyMessage="કોઈ આઈટમ મળી નથી"
@@ -287,6 +309,10 @@ const SalesBill = () => {
     const qtyTemplate = (rowData, { rowIndex }) => {
         return (
             <InputNumber
+                id={`qty_${rowIndex}`}
+                inputId={`qty_input_${rowIndex}`}
+                name={`qty_${rowIndex}`}
+                aria-label="Quantity"
                 value={rowData.qty}
                 onValueChange={(e) => handleRowChange(rowIndex, 'qty', e.value)}
                 min={0}
@@ -301,6 +327,10 @@ const SalesBill = () => {
     const rateTemplate = (rowData, { rowIndex }) => {
         return (
             <InputNumber
+                id={`rate_${rowIndex}`}
+                inputId={`rate_input_${rowIndex}`}
+                name={`rate_${rowIndex}`}
+                aria-label="Rate"
                 value={rowData.rate}
                 onValueChange={(e) => handleRowChange(rowIndex, 'rate', e.value)}
                 min={0}
@@ -330,16 +360,19 @@ const SalesBill = () => {
 
             <div className="grid p-fluid">
                 <div className="col-12 md:col-4">
-                    <label className="block mb-2 font-bold">Bill No</label>
-                    <InputText value={billNo} disabled />
+                    <label htmlFor="billNo" className="block mb-2 font-bold">Bill No</label>
+                    <InputText id="billNo" name="billNo" value={billNo} disabled />
                 </div>
                 <div className="col-12 md:col-4">
-                    <label className="block mb-2 font-bold">Bill Date</label>
-                    <Calendar value={billDate} onChange={(e) => setBillDate(e.value)} showIcon />
+                    <label htmlFor="billDate" className="block mb-2 font-bold">Bill Date</label>
+                    <Calendar id="billDate" inputId="billDate" name="billDate" value={billDate} onChange={(e) => setBillDate(e.value)} showIcon />
                 </div>
                 <div className="col-12 md:col-4">
-                    <label className="block mb-2 font-bold">Farmer Name</label>
+                    <label htmlFor="farmerName" className="block mb-2 font-bold">Farmer Name</label>
                     <Dropdown
+                        id="farmerName"
+                        inputId="farmerName"
+                        name="farmerName"
                         value={selectedParty}
                         options={parties.filter(p => p.group_id === 1)}
                         optionLabel="name"
@@ -350,8 +383,11 @@ const SalesBill = () => {
                     />
                 </div>
                 <div className="col-12 md:col-4">
-                    <label className="block mb-2 font-bold">Payment Mode</label>
+                    <label htmlFor="paymentMode" className="block mb-2 font-bold">Payment Mode</label>
                     <Dropdown
+                        id="paymentMode"
+                        inputId="paymentMode"
+                        name="paymentMode"
                         value={paymentMode}
                         options={['Cash', 'Debit']}
                         onChange={(e) => setPaymentMode(e.value)}
@@ -370,7 +406,7 @@ const SalesBill = () => {
             </DataTable>
 
             <div className="flex justify-content-start mt-3 gap-2">
-                <Button label="Add Item" icon="pi pi-plus" onClick={addRow} severity="secondary" />
+                <Button label="Add Row" icon="pi pi-plus" onClick={addRow} severity="secondary" />
             </div>
 
             <div className="flex justify-content-end mt-4">
@@ -394,8 +430,8 @@ const SalesBill = () => {
                 </Card>
             </div>
 
-            {/* Hidden Print Component */}
-            <div style={{ display: 'none' }}>
+            {/* Hidden Print Component - Must be rendered for html2canvas to work */}
+            <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
                 <SalesPrint ref={printRef} data={printData} />
             </div>
 
@@ -403,20 +439,24 @@ const SalesBill = () => {
             <Dialog header="Quick Add Item" visible={showQuickAdd} onHide={() => setShowQuickAdd(false)} style={{ width: '400px' }}>
                 <div className="flex flex-column gap-3">
                     <div className="flex flex-column gap-2">
-                        <label>Item Name</label>
-                        <InputText value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} autoFocus />
+                        <label htmlFor="qa_name">Item Name</label>
+                        <InputText id="qa_name" name="qa_name" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} autoFocus />
                     </div>
                     <div className="flex flex-column gap-2">
-                        <label>Unit</label>
-                        <Dropdown value={newItem.unit} options={['Nos', 'Kg', 'Ltr', 'Box', 'Bag']} onChange={(e) => setNewItem({ ...newItem, unit: e.value })} />
+                        <label htmlFor="qa_company">Company / Brand</label>
+                        <InputText id="qa_company" name="qa_company" value={newItem.company} onChange={(e) => setNewItem({ ...newItem, company: e.target.value })} />
                     </div>
                     <div className="flex flex-column gap-2">
-                        <label>Sales Rate</label>
-                        <InputNumber value={newItem.sales_rate} onValueChange={(e) => setNewItem({ ...newItem, sales_rate: e.value })} mode="decimal" minFractionDigits={2} />
+                        <label htmlFor="qa_unit">Unit</label>
+                        <Dropdown id="qa_unit" inputId="qa_unit" name="qa_unit" value={newItem.unit} options={['Nos', 'Kg', 'Ltr', 'Box', 'Bag']} onChange={(e) => setNewItem({ ...newItem, unit: e.value })} />
                     </div>
                     <div className="flex flex-column gap-2">
-                        <label>Opening Stock</label>
-                        <InputNumber value={newItem.stock} onValueChange={(e) => setNewItem({ ...newItem, stock: e.value })} mode="decimal" minFractionDigits={2} />
+                        <label htmlFor="qa_sales_rate">Sales Rate</label>
+                        <InputNumber id="qa_sales_rate" inputId="qa_sales_rate" name="qa_sales_rate" value={newItem.sales_rate} onValueChange={(e) => setNewItem({ ...newItem, sales_rate: e.value })} mode="decimal" minFractionDigits={2} />
+                    </div>
+                    <div className="flex flex-column gap-2">
+                        <label htmlFor="qa_stock">Opening Stock</label>
+                        <InputNumber id="qa_stock" inputId="qa_stock" name="qa_stock" value={newItem.stock} onValueChange={(e) => setNewItem({ ...newItem, stock: e.value })} mode="decimal" minFractionDigits={2} />
                     </div>
                     <div className="flex justify-content-end gap-2 mt-3">
                         <Button label="Cancel" icon="pi pi-times" onClick={() => setShowQuickAdd(false)} className="p-button-text" />

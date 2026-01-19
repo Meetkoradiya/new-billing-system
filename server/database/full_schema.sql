@@ -34,6 +34,7 @@ DROP TABLE IF EXISTS items;
 CREATE TABLE items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
+    company VARCHAR(100),
     category VARCHAR(50) DEFAULT 'Pesticide',
     code VARCHAR(50),
     unit VARCHAR(20) DEFAULT 'Nos',
@@ -55,6 +56,7 @@ CREATE TABLE sales_head (
     account_id INT NOT NULL,
     sub_total DECIMAL(15,2) DEFAULT 0.00,
     grand_total DECIMAL(15,2) DEFAULT 0.00,
+    payment_mode VARCHAR(20) DEFAULT 'Cash',
     remarks TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_sales_account FOREIGN KEY (account_id) REFERENCES accounts(id) ON UPDATE CASCADE

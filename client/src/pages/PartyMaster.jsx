@@ -95,12 +95,15 @@ const PartyMaster = () => {
             <Dialog header={formData.group_id === 1 ? "Add New Farmer" : "Add New Company"} visible={showForm} style={{ width: '50vw' }} breakpoints={{ '960px': '75vw', '641px': '100vw' }} onHide={() => setShowForm(false)} footer={dialogFooter}>
                 <div className="grid p-fluid">
                     <div className="col-12 md:col-6">
-                        <label className="block mb-2 font-medium">Name</label>
-                        <InputText value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} autoFocus placeholder="Enter Name..." />
+                        <label htmlFor="partyName" className="block mb-2 font-medium">Name</label>
+                        <InputText id="partyName" name="partyName" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} autoFocus placeholder="Enter Name..." />
                     </div>
                     <div className="col-12 md:col-6">
-                        <label className="block mb-2 font-medium">Type</label>
+                        <label htmlFor="partyType" className="block mb-2 font-medium">Type</label>
                         <Dropdown
+                            id="partyType"
+                            inputId="partyType"
+                            name="partyType"
                             value={formData.group_id}
                             options={[{ label: 'Farmer', value: 1 }, { label: 'Company / Supplier', value: 2 }]}
                             onChange={(e) => setFormData({ ...formData, group_id: e.value })}
@@ -109,16 +112,16 @@ const PartyMaster = () => {
                         />
                     </div>
                     <div className="col-12 md:col-6">
-                        <label className="block mb-2 font-medium">City / Village</label>
-                        <InputText value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
+                        <label htmlFor="partyCity" className="block mb-2 font-medium">City / Village</label>
+                        <InputText id="partyCity" name="partyCity" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
                     </div>
                     <div className="col-12 md:col-6">
-                        <label className="block mb-2 font-medium">Mobile</label>
-                        <InputText keyfilter="int" value={formData.mobile} onChange={(e) => setFormData({ ...formData, mobile: e.target.value })} />
+                        <label htmlFor="partyMobile" className="block mb-2 font-medium">Mobile</label>
+                        <InputText id="partyMobile" name="partyMobile" keyfilter="int" value={formData.mobile} onChange={(e) => setFormData({ ...formData, mobile: e.target.value })} />
                     </div>
                     <div className="col-12">
-                        <label className="block mb-2 font-medium">Address</label>
-                        <InputText value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
+                        <label htmlFor="partyAddress" className="block mb-2 font-medium">Address</label>
+                        <InputText id="partyAddress" name="partyAddress" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
                     </div>
                 </div>
             </Dialog>

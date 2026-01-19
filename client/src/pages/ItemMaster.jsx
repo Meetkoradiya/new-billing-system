@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getItems, createItem, getAccounts, updateItemStock } from '../services/api'; // getAccounts added
+import { getItems, createItem, getAccounts, updateItemStock, deleteItem } from '../services/api'; // getAccounts added
 
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -97,8 +97,25 @@ const ItemMaster = () => {
         </div>
     );
 
+    const handleDelete = async (rowData) => {
+        if (!window.confirm(`Are you sure you want to delete ${rowData.name}?`)) return;
+        try {
+            await deleteItem(rowData.id);
+            toast.current.show({ severity: 'success', summary: 'Success', detail: 'Item Deleted' });
+            fetchItems();
+        } catch (error) {
+            const msg = error.response?.data?.message || 'Failed to delete item';
+            toast.current.show({ severity: 'error', summary: 'Error', detail: msg });
+        }
+    };
+
     const actionTemplate = (rowData) => {
-        return <Button icon="pi pi-plus" rounded outlined severity="success" tooltip="Add Stock" onClick={() => openStockDialog(rowData)} />;
+        return (
+            <div className="flex gap-2">
+                <Button icon="pi pi-plus" rounded outlined severity="success" tooltip="Add Stock" onClick={() => openStockDialog(rowData)} />
+                <Button icon="pi pi-trash" rounded outlined severity="danger" tooltip="Delete Item" onClick={() => handleDelete(rowData)} />
+            </div>
+        );
     };
 
     return (
@@ -124,12 +141,15 @@ const ItemMaster = () => {
             <Dialog header="Add New Product" visible={showForm} style={{ width: '50vw' }} breakpoints={{ '960px': '75vw', '641px': '100vw' }} onHide={() => setShowForm(false)} footer={dialogFooter}>
                 <div className="grid p-fluid">
                     <div className="col-12 md:col-6">
-                        <label className="block mb-2 font-medium">Item Name</label>
-                        <InputText value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} autoFocus />
+                        <label htmlFor="itemName" className="block mb-2 font-medium">Item Name</label>
+                        <InputText id="itemName" name="itemName" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} autoFocus />
                     </div>
                     <div className="col-12 md:col-6">
-                        <label className="block mb-2 font-medium">Company / Brand</label>
+                        <label htmlFor="itemCompany" className="block mb-2 font-medium">Company / Brand</label>
                         <Dropdown
+                            id="itemCompany"
+                            inputId="itemCompany"
+                            name="itemCompany"
                             value={formData.company}
                             options={companies}
                             optionLabel="name"
@@ -141,8 +161,11 @@ const ItemMaster = () => {
                         />
                     </div>
                     <div className="col-12 md:col-4">
-                        <label className="block mb-2 font-medium">Category</label>
+                        <label htmlFor="itemCategory" className="block mb-2 font-medium">Category</label>
                         <Dropdown
+                            id="itemCategory"
+                            inputId="itemCategory"
+                            name="itemCategory"
                             value={formData.category}
                             options={['Pesticide', 'Seeds']}
                             onChange={(e) => setFormData({ ...formData, category: e.value })}
@@ -150,12 +173,15 @@ const ItemMaster = () => {
                         />
                     </div>
                     <div className="col-12 md:col-4">
-                        <label className="block mb-2 font-medium">Code / SKU</label>
-                        <InputText value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} />
+                        <label htmlFor="itemCode" className="block mb-2 font-medium">Code / SKU</label>
+                        <InputText id="itemCode" name="itemCode" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} />
                     </div>
                     <div className="col-12 md:col-4">
-                        <label className="block mb-2 font-medium">Unit</label>
+                        <label htmlFor="itemUnit" className="block mb-2 font-medium">Unit</label>
                         <Dropdown
+                            id="itemUnit"
+                            inputId="itemUnit"
+                            name="itemUnit"
                             value={formData.unit}
                             options={['Nos', 'Kg', 'Ltr', 'Box', 'Bag']}
                             onChange={(e) => setFormData({ ...formData, unit: e.value })}
@@ -163,16 +189,19 @@ const ItemMaster = () => {
                         />
                     </div>
                     <div className="col-12 md:col-6">
-                        <label className="block mb-2 font-medium">Purchase Rate</label>
-                        <InputNumber value={formData.purchase_rate} onValueChange={(e) => setFormData({ ...formData, purchase_rate: e.value })} mode="decimal" minFractionDigits={2} />
+                        <label htmlFor="itemPurchaseRate" className="block mb-2 font-medium">Purchase Rate</label>
+                        <InputNumber id="itemPurchaseRate" inputId="itemPurchaseRate" name="itemPurchaseRate" value={formData.purchase_rate} onValueChange={(e) => setFormData({ ...formData, purchase_rate: e.value })} mode="decimal" minFractionDigits={2} />
                     </div>
                     <div className="col-12 md:col-6">
-                        <label className="block mb-2 font-medium">Opening Stock</label>
-                        <InputNumber value={formData.stock} onValueChange={(e) => setFormData({ ...formData, stock: e.value })} mode="decimal" minFractionDigits={2} />
+                        <label htmlFor="itemStock" className="block mb-2 font-medium">Opening Stock</label>
+                        <InputNumber id="itemStock" inputId="itemStock" name="itemStock" value={formData.stock} onValueChange={(e) => setFormData({ ...formData, stock: e.value })} mode="decimal" minFractionDigits={2} />
                     </div>
                     <div className="col-12 md:col-6">
-                        <label className="block mb-2 font-medium">GST %</label>
+                        <label htmlFor="itemGst" className="block mb-2 font-medium">GST %</label>
                         <Dropdown
+                            id="itemGst"
+                            inputId="itemGst"
+                            name="itemGst"
                             value={formData.gst_percent}
                             options={[0, 5, 12, 18, 28]}
                             onChange={(e) => setFormData({ ...formData, gst_percent: e.value })}
@@ -185,8 +214,8 @@ const ItemMaster = () => {
             <Dialog header={`Add Stock: ${stockUpdateData.name}`} visible={showStockDialog} style={{ width: '30vw' }} breakpoints={{ '960px': '75vw', '641px': '100vw' }} onHide={() => setShowStockDialog(false)} footer={stockDialogFooter}>
                 <div className="grid p-fluid">
                     <div className="col-12">
-                        <label className="block mb-2 font-medium">Quantity to Add</label>
-                        <InputNumber value={stockUpdateData.qty} onValueChange={(e) => setStockUpdateData({ ...stockUpdateData, qty: e.value })} mode="decimal" showButtons min={0} autoFocus />
+                        <label htmlFor="stockQty" className="block mb-2 font-medium">Quantity to Add</label>
+                        <InputNumber id="stockQty" inputId="stockQty" name="stockQty" value={stockUpdateData.qty} onValueChange={(e) => setStockUpdateData({ ...stockUpdateData, qty: e.value })} mode="decimal" showButtons min={0} autoFocus />
                     </div>
                 </div>
             </Dialog>

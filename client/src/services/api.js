@@ -14,6 +14,7 @@ export const getItems = () => api.get('/items');
 export const createItem = (data) => api.post('/items', data);
 export const searchItems = (query) => api.get(`/items/search?query=${query}`);
 export const updateItemStock = (id, qty) => api.put(`/items/${id}/stock`, { qty });
+export const deleteItem = (id) => api.delete(`/items/${id}`);
 
 export const createSale = (data) => api.post('/sales', data);
 export const getSales = () => api.get('/sales');

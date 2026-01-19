@@ -25,6 +25,7 @@ CREATE TABLE accounts (
 CREATE TABLE items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
+    company VARCHAR(100),
     category VARCHAR(50) DEFAULT 'Pesticide',
     code VARCHAR(50),
     unit VARCHAR(20),

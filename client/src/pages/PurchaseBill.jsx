@@ -206,6 +206,10 @@ const PurchaseBill = () => {
         return (
             <div className="flex gap-2">
                 <Dropdown
+                    id={`pb_item_${rowIndex}`}
+                    inputId={`pb_item_input_${rowIndex}`}
+                    name={`pb_item_${rowIndex}`}
+                    aria-label="Select Item"
                     value={rowData.item_id}
                     options={productList.filter(p => !selectedParty || !p.company || p.company.toLowerCase().includes(selectedParty.name.toLowerCase()) || selectedParty.name.toLowerCase().includes(p.company.toLowerCase()))}
                     optionLabel="name"
@@ -222,6 +226,10 @@ const PurchaseBill = () => {
     const qtyTemplate = (rowData, { rowIndex }) => {
         return (
             <InputNumber
+                id={`pb_qty_${rowIndex}`}
+                inputId={`pb_qty_input_${rowIndex}`}
+                name={`pb_qty_${rowIndex}`}
+                aria-label="Quantity"
                 value={rowData.qty}
                 onValueChange={(e) => handleRowChange(rowIndex, 'qty', e.value)}
                 min={0}
@@ -236,6 +244,10 @@ const PurchaseBill = () => {
     const rateTemplate = (rowData, { rowIndex }) => {
         return (
             <InputNumber
+                id={`pb_rate_${rowIndex}`}
+                inputId={`pb_rate_input_${rowIndex}`}
+                name={`pb_rate_${rowIndex}`}
+                aria-label="Rate"
                 value={rowData.rate}
                 onValueChange={(e) => handleRowChange(rowIndex, 'rate', e.value)}
                 min={0}
@@ -269,16 +281,19 @@ const PurchaseBill = () => {
 
             <div className="grid p-fluid">
                 <div className="col-12 md:col-4">
-                    <label className="block mb-2 font-bold">Purchase Bill No</label>
-                    <InputText value={billNo} onChange={(e) => setBillNo(e.target.value)} />
+                    <label htmlFor="pb_billNo" className="block mb-2 font-bold">Purchase Bill No</label>
+                    <InputText id="pb_billNo" name="pb_billNo" value={billNo} onChange={(e) => setBillNo(e.target.value)} />
                 </div>
                 <div className="col-12 md:col-4">
-                    <label className="block mb-2 font-bold">Bill Date</label>
-                    <Calendar value={billDate} onChange={(e) => setBillDate(e.value)} showIcon />
+                    <label htmlFor="pb_billDate" className="block mb-2 font-bold">Bill Date</label>
+                    <Calendar id="pb_billDate" inputId="pb_billDate" name="pb_billDate" value={billDate} onChange={(e) => setBillDate(e.value)} showIcon />
                 </div>
                 <div className="col-12 md:col-4">
-                    <label className="block mb-2 font-bold">Company / Supplier</label>
+                    <label htmlFor="pb_party" className="block mb-2 font-bold">Company / Supplier</label>
                     <Dropdown
+                        id="pb_party"
+                        inputId="pb_party"
+                        name="pb_party"
                         value={selectedParty}
                         options={parties.filter(p => p.group_id === 2)}
                         optionLabel="name"
@@ -323,12 +338,15 @@ const PurchaseBill = () => {
                 }
             }}>
                 <div className="col-12">
-                    <label className="block mb-2 font-medium">Item Name</label>
-                    <InputText value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} autoFocus />
+                    <label htmlFor="pd_name" className="block mb-2 font-medium">Item Name</label>
+                    <InputText id="pd_name" name="pd_name" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} autoFocus />
                 </div>
                 <div className="col-12">
-                    <label className="block mb-2 font-medium">Company / Brand</label>
+                    <label htmlFor="pd_company" className="block mb-2 font-medium">Company / Brand</label>
                     <Dropdown
+                        id="pd_company"
+                        inputId="pd_company"
+                        name="pd_company"
                         value={newItem.company}
                         options={parties.filter(p => p.group_id === 2)}
                         optionLabel="name"
@@ -341,20 +359,20 @@ const PurchaseBill = () => {
                     />
                 </div>
                 <div className="col-6">
-                    <label className="block mb-2 font-medium">Category</label>
-                    <Dropdown value={newItem.category} options={['Pesticide', 'Seeds']} onChange={(e) => setNewItem({ ...newItem, category: e.value })} placeholder="Select Category" />
+                    <label htmlFor="pd_category" className="block mb-2 font-medium">Category</label>
+                    <Dropdown id="pd_category" inputId="pd_category" name="pd_category" value={newItem.category} options={['Pesticide', 'Seeds']} onChange={(e) => setNewItem({ ...newItem, category: e.value })} placeholder="Select Category" />
                 </div>
                 <div className="col-6">
-                    <label className="block mb-2 font-medium">Unit</label>
-                    <Dropdown value={newItem.unit} options={['Nos', 'Kg', 'Ltr', 'Box', 'Bag']} onChange={(e) => setNewItem({ ...newItem, unit: e.value })} placeholder="Select Unit" />
+                    <label htmlFor="pd_unit" className="block mb-2 font-medium">Unit</label>
+                    <Dropdown id="pd_unit" inputId="pd_unit" name="pd_unit" value={newItem.unit} options={['Nos', 'Kg', 'Ltr', 'Box', 'Bag']} onChange={(e) => setNewItem({ ...newItem, unit: e.value })} placeholder="Select Unit" />
                 </div>
                 <div className="col-12">
-                    <label className="block mb-2 font-medium">Purchase Rate</label>
-                    <InputNumber value={newItem.purchase_rate} onValueChange={(e) => setNewItem({ ...newItem, purchase_rate: e.value })} mode="decimal" minFractionDigits={2} />
+                    <label htmlFor="pd_purchase_rate" className="block mb-2 font-medium">Purchase Rate</label>
+                    <InputNumber id="pd_purchase_rate" inputId="pd_purchase_rate" name="pd_purchase_rate" value={newItem.purchase_rate} onValueChange={(e) => setNewItem({ ...newItem, purchase_rate: e.value })} mode="decimal" minFractionDigits={2} />
                 </div>
                 <div className="col-12">
-                    <label className="block mb-2 font-medium">Opening Stock</label>
-                    <InputNumber value={newItem.stock} onValueChange={(e) => setNewItem({ ...newItem, stock: e.value })} mode="decimal" minFractionDigits={2} />
+                    <label htmlFor="pd_stock" className="block mb-2 font-medium">Opening Stock</label>
+                    <InputNumber id="pd_stock" inputId="pd_stock" name="pd_stock" value={newItem.stock} onValueChange={(e) => setNewItem({ ...newItem, stock: e.value })} mode="decimal" minFractionDigits={2} />
                 </div>
             </Dialog>
 
