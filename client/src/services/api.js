@@ -13,6 +13,7 @@ export const searchAccounts = (query) => api.get(`/accounts/search?query=${query
 export const getItems = () => api.get('/items');
 export const createItem = (data) => api.post('/items', data);
 export const searchItems = (query) => api.get(`/items/search?query=${query}`);
+export const updateItemStock = (id, qty) => api.put(`/items/${id}/stock`, { qty });
 
 export const createSale = (data) => api.post('/sales', data);
 export const getSales = () => api.get('/sales');

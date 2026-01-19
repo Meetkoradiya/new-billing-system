@@ -6,7 +6,7 @@ exports.createSale = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        const { bill_no, bill_date, account_id, items, remarks } = req.body;
+        const { bill_no, bill_date, account_id, payment_mode, items, remarks } = req.body;
         // Calculate totals server-side for security (or trust client for now/MVP)
         // We will trust client sent totals for MVP simplicity or recalculate.
         // Let's recalculate basic totals.
@@ -25,8 +25,8 @@ exports.createSale = async (req, res) => {
 
         // Insert Head
         const [headResult] = await connection.query(
-            'INSERT INTO sales_head (bill_no, bill_date, account_id, sub_total, grand_total, remarks) VALUES (?, ?, ?, ?, ?, ?)',
-            [bill_no, bill_date, account_id, sub_total, grand_total, remarks]
+            'INSERT INTO sales_head (bill_no, bill_date, account_id, sub_total, grand_total, payment_mode, remarks) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [bill_no, bill_date, account_id, sub_total, grand_total, payment_mode || 'Cash', remarks]
         );
         const sales_id = headResult.insertId;
 

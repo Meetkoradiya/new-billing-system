@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getItems, createItem, getAccounts } from '../services/api'; // getAccounts added
+import { getItems, createItem, getAccounts, updateItemStock } from '../services/api'; // getAccounts added
 
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -8,6 +8,7 @@ import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from 'primereact/inputnumber';
 import { Dropdown } from 'primereact/dropdown';
+import { Toast } from 'primereact/toast'; // Added Toast
 
 const ItemMaster = () => {
     const [items, setItems] = useState([]);
@@ -20,8 +21,14 @@ const ItemMaster = () => {
         code: '',
         unit: 'Nos',
         purchase_rate: 0,
-        gst_percent: 0
+        gst_percent: 0,
+        stock: 0
     });
+
+    // Stock Update State
+    const [showStockDialog, setShowStockDialog] = useState(false);
+    const [stockUpdateData, setStockUpdateData] = useState({ id: null, name: '', qty: 0 });
+    const toast = React.useRef(null);
 
     useEffect(() => {
         fetchItems();
@@ -52,11 +59,28 @@ const ItemMaster = () => {
         try {
             await createItem(formData);
             setShowForm(false);
-            setFormData({ name: '', company: '', category: '', code: '', unit: 'Nos', purchase_rate: 0, gst_percent: 0 });
+            setFormData({ name: '', company: '', category: '', code: '', unit: 'Nos', purchase_rate: 0, gst_percent: 0, stock: 0 });
             fetchItems();
         } catch (error) {
             alert('Error creating item');
         }
+    };
+
+    const handleStockUpdate = async () => {
+        try {
+            await updateItemStock(stockUpdateData.id, stockUpdateData.qty);
+            toast.current.show({ severity: 'success', summary: 'Success', detail: 'Stock Updated Successfully' });
+            setShowStockDialog(false);
+            setStockUpdateData({ id: null, name: '', qty: 0 });
+            fetchItems();
+        } catch (error) {
+            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Failed to update stock' });
+        }
+    };
+
+    const openStockDialog = (rowData) => {
+        setStockUpdateData({ id: rowData.id, name: rowData.name, qty: 0 });
+        setShowStockDialog(true);
     };
 
     const dialogFooter = (
@@ -66,8 +90,20 @@ const ItemMaster = () => {
         </div>
     );
 
+    const stockDialogFooter = (
+        <div>
+            <Button label="Cancel" icon="pi pi-times" onClick={() => setShowStockDialog(false)} className="p-button-text" />
+            <Button label="Update Stock" icon="pi pi-check" onClick={handleStockUpdate} autoFocus />
+        </div>
+    );
+
+    const actionTemplate = (rowData) => {
+        return <Button icon="pi pi-plus" rounded outlined severity="success" tooltip="Add Stock" onClick={() => openStockDialog(rowData)} />;
+    };
+
     return (
         <div className="surface-card p-4 shadow-2 border-round">
+            <Toast ref={toast} />
             <div className="flex justify-content-between align-items-center mb-4">
                 <h2 className="text-xl font-bold m-0">Item Master</h2>
                 <Button label="Add New Item" icon="pi pi-plus" onClick={() => setShowForm(true)} />
@@ -80,7 +116,9 @@ const ItemMaster = () => {
                 <Column field="category" header="Category" sortable></Column>
                 <Column field="unit" header="Unit" sortable></Column>
                 <Column field="purchase_rate" header="Pur. Rate" sortable className="text-right"></Column>
+                <Column field="stock" header="Stock" sortable className="text-right"></Column>
                 <Column field="gst_percent" header="GST %" sortable className="text-right" body={(rowData) => `${rowData.gst_percent}%`}></Column>
+                <Column body={actionTemplate} header="Add Stock" style={{ width: '10%' }}></Column>
             </DataTable>
 
             <Dialog header="Add New Product" visible={showForm} style={{ width: '50vw' }} breakpoints={{ '960px': '75vw', '641px': '100vw' }} onHide={() => setShowForm(false)} footer={dialogFooter}>
@@ -129,6 +167,10 @@ const ItemMaster = () => {
                         <InputNumber value={formData.purchase_rate} onValueChange={(e) => setFormData({ ...formData, purchase_rate: e.value })} mode="decimal" minFractionDigits={2} />
                     </div>
                     <div className="col-12 md:col-6">
+                        <label className="block mb-2 font-medium">Opening Stock</label>
+                        <InputNumber value={formData.stock} onValueChange={(e) => setFormData({ ...formData, stock: e.value })} mode="decimal" minFractionDigits={2} />
+                    </div>
+                    <div className="col-12 md:col-6">
                         <label className="block mb-2 font-medium">GST %</label>
                         <Dropdown
                             value={formData.gst_percent}
@@ -139,7 +181,16 @@ const ItemMaster = () => {
                     </div>
                 </div>
             </Dialog>
-        </div>
+
+            <Dialog header={`Add Stock: ${stockUpdateData.name}`} visible={showStockDialog} style={{ width: '30vw' }} breakpoints={{ '960px': '75vw', '641px': '100vw' }} onHide={() => setShowStockDialog(false)} footer={stockDialogFooter}>
+                <div className="grid p-fluid">
+                    <div className="col-12">
+                        <label className="block mb-2 font-medium">Quantity to Add</label>
+                        <InputNumber value={stockUpdateData.qty} onValueChange={(e) => setStockUpdateData({ ...stockUpdateData, qty: e.value })} mode="decimal" showButtons min={0} autoFocus />
+                    </div>
+                </div>
+            </Dialog>
+        </div >
     );
 };
 

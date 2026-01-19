@@ -10,6 +10,7 @@ import PurchaseBill from './pages/PurchaseBill';
 import PurchaseList from './pages/PurchaseList';
 import Returns from './pages/Returns';
 import StockReport from './pages/StockReport';
+import PaymentReport from './pages/PaymentReport';
 import LoginPage from './pages/LoginPage';
 // PrimeReact
 import { Button } from 'primereact/button';
@@ -26,9 +27,10 @@ const SidebarContent = ({ closeSidebar }) => (
         <SidebarLink to="/stock" icon={Box} label="Stock Report" onClick={closeSidebar} />
         <SidebarLink to="/parties" icon={Users} label="Farmers / Parties" onClick={closeSidebar} />
         <SidebarLink to="/items" icon={Package} label="Items" onClick={closeSidebar} />
-        <SidebarLink to="/sales" icon={FileText} label="Sales Bill" onClick={closeSidebar} />
-        <SidebarLink to="/purchase" icon={ShoppingCart} label="Purchase Bill" onClick={closeSidebar} />
+        <SidebarLink to="/sales" icon={FileText} label="Farmer Sales" onClick={closeSidebar} />
+        <SidebarLink to="/purchase" icon={ShoppingCart} label="Company Purchase" onClick={closeSidebar} />
         <SidebarLink to="/purchase-history" icon={ShoppingCart} label="Purchase History" onClick={closeSidebar} />
+        <SidebarLink to="/payments" icon={RefreshCcw} label="Payment Report" onClick={closeSidebar} />
         <SidebarLink to="/returns" icon={RefreshCcw} label="Returns" onClick={closeSidebar} />
       </div>
     </div>
@@ -118,6 +120,7 @@ function App() {
                     <Route path="/sales" element={<SalesBill />} />
                     <Route path="/purchase" element={<PurchaseBill />} />
                     <Route path="/purchase-history" element={<PurchaseList />} />
+                    <Route path="/payments" element={<PaymentReport />} />
                     <Route path="/returns" element={<Returns />} />
                   </Routes>
                 </div>

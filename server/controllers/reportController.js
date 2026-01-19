@@ -29,3 +29,36 @@ exports.getStockSummary = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+exports.getPaymentStats = async (req, res) => {
+    try {
+        const [rows] = await db.query(`
+            SELECT 
+                payment_mode, 
+                COUNT(*) as count, 
+                SUM(grand_total) as total_amount 
+            FROM sales_head 
+            GROUP BY payment_mode
+        `);
+
+        let stats = {
+            cash: { count: 0, total: 0 },
+            debit: { count: 0, total: 0 }
+        };
+
+        rows.forEach(row => {
+            const mode = (row.payment_mode || 'Cash').toLowerCase();
+            if (mode === 'cash') {
+                stats.cash.count = row.count;
+                stats.cash.total = parseFloat(row.total_amount || 0);
+            } else if (mode === 'debit') {
+                stats.debit.count = row.count;
+                stats.debit.total = parseFloat(row.total_amount || 0);
+            }
+        });
+
+        res.json(stats);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

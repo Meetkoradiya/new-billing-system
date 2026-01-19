@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getAccounts, getItems, createSale } from '../services/api';
+import { getAccounts, getItems, createSale, createItem } from '../services/api';
 import { useReactToPrint } from 'react-to-print';
 import SalesPrint from '../components/SalesPrint';
 
 // PrimeReact Imports
 import { Dropdown } from 'primereact/dropdown';
+import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from 'primereact/inputnumber';
 import { Button } from 'primereact/button';
@@ -23,12 +24,18 @@ const SalesBill = () => {
     const [billNo, setBillNo] = useState('');
     const [billDate, setBillDate] = useState(new Date());
     const [selectedParty, setSelectedParty] = useState(null);
+    const [paymentMode, setPaymentMode] = useState('Cash');
     const [remarks, setRemarks] = useState('');
 
     // Print Data
     const [printData, setPrintData] = useState(null);
     const printRef = useRef();
     const toast = useRef(null);
+
+    // Quick Add Item State
+    const [showQuickAdd, setShowQuickAdd] = useState(false);
+    const [newItem, setNewItem] = useState({ name: '', unit: 'Nos', sales_rate: 0, purchase_rate: 0, stock: 0 });
+    const [activeRowIndex, setActiveRowIndex] = useState(null);
 
     // Grid Data
     const [rows, setRows] = useState([
@@ -42,13 +49,35 @@ const SalesBill = () => {
     const loadMasters = async () => {
         try {
             const accRes = await getAccounts();
-            const itemRes = await getItems();
-            setParties(accRes.data);
-            setProductList(itemRes.data);
-            setBillNo(`SB-${Math.floor(Math.random() * 10000)}`);
+            if (Array.isArray(accRes.data)) {
+                setParties(accRes.data);
+            } else {
+                console.warn("Accounts API response format invalid:", accRes.data);
+            }
         } catch (error) {
-            console.error('Error loading masters', error);
+            console.error('Error loading parties', error);
+            // toast.current.show({ severity: 'error', summary: 'Error', detail: 'Failed to load farmers' });
         }
+
+        try {
+            const itemRes = await getItems();
+            console.log("Items API Response:", itemRes);
+            if (Array.isArray(itemRes.data)) {
+                setProductList(itemRes.data);
+                if (itemRes.data.length === 0) {
+                    toast.current.show({ severity: 'warn', summary: 'Data Check', detail: '0 Items found in database' });
+                }
+            } else {
+                console.error("Items data is not an array:", itemRes.data);
+                toast.current.show({ severity: 'error', summary: 'API Error', detail: 'Invalid item data received' });
+                setProductList([]);
+            }
+        } catch (error) {
+            console.error('Error loading items', error);
+            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Failed to load items' });
+        }
+
+        if (!billNo) setBillNo(`SB-${Math.floor(Math.random() * 10000)}`);
     };
 
     const handleRowChange = (index, field, value) => {
@@ -59,9 +88,13 @@ const SalesBill = () => {
         if (field === 'item_id') {
             const item = productList.find(p => p.id === value); // value is id here from Dropdown
             if (item) {
-                newRows[index].rate = item.sales_rate;
+                // Use sales_rate if available, otherwise purchase_rate or 0
+                newRows[index].rate = item.sales_rate || item.purchase_rate || 0;
                 newRows[index].unit = item.unit;
                 newRows[index].name = item.name;
+            } else {
+                // Custom Item Typed
+                newRows[index].name = value;
             }
         }
 
@@ -131,6 +164,7 @@ const SalesBill = () => {
                 bill_no: billNo,
                 bill_date: billDate.toISOString().split('T')[0],
                 account_id: selectedParty.id,
+                payment_mode: paymentMode,
                 remarks,
                 items: rows.filter(r => r.item_id).map(r => ({
                     item_id: r.item_id,
@@ -147,6 +181,7 @@ const SalesBill = () => {
                 bill_no: billNo,
                 bill_date: billDate,
                 party_name: selectedParty.name,
+                payment_mode: paymentMode,
                 items: rows.filter(r => r.item_id).map(r => ({
                     ...r,
                     item_name: r.name
@@ -168,6 +203,7 @@ const SalesBill = () => {
                 setBillNo(`SB-${Math.floor(Math.random() * 10000)}`);
                 setRows([{ id: 1, item_id: '', qty: 1, rate: 0, amount: 0, unit: '', name: '' }]);
                 setSelectedParty(null);
+                setPaymentMode('Cash');
             }, 500);
 
         } catch (error) {
@@ -176,7 +212,59 @@ const SalesBill = () => {
         }
     };
 
+    // Quick Add Logic
+    const handleQuickAdd = async () => {
+        if (!newItem.name) return;
+        try {
+            const payload = {
+                ...newItem,
+                code: 'QA-' + Math.floor(Math.random() * 1000), // Auto-generate code
+                gst_percent: 0,
+                stock: newItem.stock || 0
+            };
+            const response = await createItem(payload);
+
+            // Handle different response structures
+            // If axios interceptor returns response.data directly, handle that.
+            const newId = response.data?.id || response.id;
+
+            if (!newId) console.warn("New ID not found in response", response);
+
+            toast.current.show({ severity: 'success', summary: 'Success', detail: 'Item Added Successfully' });
+            setShowQuickAdd(false);
+
+            // Optimistically add to list
+            const addedItem = { ...payload, id: newId }; // If newId is undefined, item will have no ID till reload, which is arguably safer than crashing
+            setProductList(prev => [...prev, addedItem]);
+
+            // Auto Select in First Empty Row or Add New Row
+            let targetIndex = rows.findIndex(r => !r.item_id);
+            let updatedRows = [...rows];
+
+            if (targetIndex === -1) {
+                targetIndex = updatedRows.length;
+                updatedRows.push({ id: updatedRows.length + 1, item_id: '', qty: 1, rate: 0, amount: 0, unit: '', name: '' });
+            }
+
+            const row = updatedRows[targetIndex];
+            row.item_id = newId;
+            row.name = addedItem.name;
+            row.unit = addedItem.unit;
+            row.rate = parseFloat(addedItem.sales_rate) || 0;
+            row.amount = (parseFloat(row.qty) || 0) * row.rate;
+            setRows(updatedRows);
+
+            setNewItem({ name: '', unit: 'Nos', sales_rate: 0, purchase_rate: 0, stock: 0 });
+            // Background refresh to ensure consistency
+            loadMasters();
+        } catch (error) {
+            console.error(error);
+            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Failed to add item' });
+        }
+    };
+
     // Table Templates
+
     const itemTemplate = (rowData, { rowIndex }) => {
         return (
             <Dropdown
@@ -184,10 +272,14 @@ const SalesBill = () => {
                 options={productList}
                 optionLabel="name"
                 optionValue="id"
+                itemTemplate={(option) => <div><span className="font-bold mr-2">[{option.code}]</span>{option.name} <span className="text-secondary text-sm ml-2">(Stock: {option.stock || 0})</span></div>}
                 onChange={(e) => handleRowChange(rowIndex, 'item_id', e.value)}
                 placeholder="Select Item"
                 filter
+                filterBy="name,code"
                 className="w-full"
+                appendTo={document.body}
+                emptyMessage="કોઈ આઈટમ મળી નથી"
             />
         );
     };
@@ -231,7 +323,10 @@ const SalesBill = () => {
     return (
         <div className="surface-card p-4 shadow-2 border-round">
             <Toast ref={toast} />
-            <h2 className="text-2xl font-bold mb-4">Sales Invoice</h2>
+            <div className="flex align-items-center justify-content-between mb-4">
+                <h2 className="text-2xl font-bold m-0">Sales Invoice</h2>
+                <Button icon="pi pi-refresh" rounded text onClick={loadMasters} tooltip="Refresh Items" />
+            </div>
 
             <div className="grid p-fluid">
                 <div className="col-12 md:col-4">
@@ -250,7 +345,17 @@ const SalesBill = () => {
                         optionLabel="name"
                         onChange={(e) => setSelectedParty(e.value)}
                         placeholder="Select Farmer"
+                        editable
                         filter
+                    />
+                </div>
+                <div className="col-12 md:col-4">
+                    <label className="block mb-2 font-bold">Payment Mode</label>
+                    <Dropdown
+                        value={paymentMode}
+                        options={['Cash', 'Debit']}
+                        onChange={(e) => setPaymentMode(e.value)}
+                        placeholder="Select Payment Mode"
                     />
                 </div>
             </div>
@@ -264,7 +369,7 @@ const SalesBill = () => {
                 <Column body={actionTemplate} style={{ width: '50px' }}></Column>
             </DataTable>
 
-            <div className="flex justify-content-start mt-3">
+            <div className="flex justify-content-start mt-3 gap-2">
                 <Button label="Add Item" icon="pi pi-plus" onClick={addRow} severity="secondary" />
             </div>
 
@@ -293,6 +398,32 @@ const SalesBill = () => {
             <div style={{ display: 'none' }}>
                 <SalesPrint ref={printRef} data={printData} />
             </div>
+
+            {/* Quick Add Dialog */}
+            <Dialog header="Quick Add Item" visible={showQuickAdd} onHide={() => setShowQuickAdd(false)} style={{ width: '400px' }}>
+                <div className="flex flex-column gap-3">
+                    <div className="flex flex-column gap-2">
+                        <label>Item Name</label>
+                        <InputText value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} autoFocus />
+                    </div>
+                    <div className="flex flex-column gap-2">
+                        <label>Unit</label>
+                        <Dropdown value={newItem.unit} options={['Nos', 'Kg', 'Ltr', 'Box', 'Bag']} onChange={(e) => setNewItem({ ...newItem, unit: e.value })} />
+                    </div>
+                    <div className="flex flex-column gap-2">
+                        <label>Sales Rate</label>
+                        <InputNumber value={newItem.sales_rate} onValueChange={(e) => setNewItem({ ...newItem, sales_rate: e.value })} mode="decimal" minFractionDigits={2} />
+                    </div>
+                    <div className="flex flex-column gap-2">
+                        <label>Opening Stock</label>
+                        <InputNumber value={newItem.stock} onValueChange={(e) => setNewItem({ ...newItem, stock: e.value })} mode="decimal" minFractionDigits={2} />
+                    </div>
+                    <div className="flex justify-content-end gap-2 mt-3">
+                        <Button label="Cancel" icon="pi pi-times" onClick={() => setShowQuickAdd(false)} className="p-button-text" />
+                        <Button label="Save Item" icon="pi pi-check" onClick={handleQuickAdd} />
+                    </div>
+                </div>
+            </Dialog>
         </div>
     );
 };

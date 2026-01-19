@@ -71,7 +71,16 @@ const PartyMaster = () => {
             <Toast ref={toast} />
             <div className="flex justify-content-between align-items-center mb-4">
                 <h2 className="text-xl font-bold m-0">Farmers / Companies List</h2>
-                <Button label="Add New Account" icon="pi pi-plus" onClick={() => setShowForm(true)} />
+                <div className="flex gap-2">
+                    <Button label="Add Farmer" icon="pi pi-user-plus" severity="success" onClick={() => {
+                        setFormData({ ...formData, group_id: 1 });
+                        setShowForm(true);
+                    }} />
+                    <Button label="Add Company" icon="pi pi-building" severity="info" onClick={() => {
+                        setFormData({ ...formData, group_id: 2 });
+                        setShowForm(true);
+                    }} />
+                </div>
             </div>
 
             <DataTable value={accounts} paginator rows={10} stripedRows showGridlines tableStyle={{ minWidth: '50rem' }}>
@@ -83,7 +92,7 @@ const PartyMaster = () => {
                 <Column field="address" header="Address"></Column>
             </DataTable>
 
-            <Dialog header="New Account Entry" visible={showForm} style={{ width: '50vw' }} breakpoints={{ '960px': '75vw', '641px': '100vw' }} onHide={() => setShowForm(false)} footer={dialogFooter}>
+            <Dialog header={formData.group_id === 1 ? "Add New Farmer" : "Add New Company"} visible={showForm} style={{ width: '50vw' }} breakpoints={{ '960px': '75vw', '641px': '100vw' }} onHide={() => setShowForm(false)} footer={dialogFooter}>
                 <div className="grid p-fluid">
                     <div className="col-12 md:col-6">
                         <label className="block mb-2 font-medium">Name</label>
@@ -96,6 +105,7 @@ const PartyMaster = () => {
                             options={[{ label: 'Farmer', value: 1 }, { label: 'Company / Supplier', value: 2 }]}
                             onChange={(e) => setFormData({ ...formData, group_id: e.value })}
                             placeholder="Select Type"
+                            disabled
                         />
                     </div>
                     <div className="col-12 md:col-6">

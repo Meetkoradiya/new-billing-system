@@ -37,7 +37,8 @@ const PurchaseBill = () => {
         code: '',
         unit: 'Nos',
         purchase_rate: 0,
-        gst_percent: 0
+        gst_percent: 0,
+        stock: 0
     });
 
     // Print Data
@@ -193,7 +194,7 @@ const PurchaseBill = () => {
             await createItem(newItem);
             toast.current.show({ severity: 'success', summary: 'Success', detail: 'Product Added Successfully' });
             setShowItemDialog(false);
-            setNewItem({ name: '', company: '', category: 'Pesticide', code: '', unit: 'Nos', purchase_rate: 0, gst_percent: 0 });
+            setNewItem({ name: '', company: '', category: 'Pesticide', code: '', unit: 'Nos', purchase_rate: 0, gst_percent: 0, stock: 0 });
             loadMasters(); // Refresh list
         } catch (error) {
             toast.current.show({ severity: 'error', summary: 'Error', detail: 'Failed to create item' });
@@ -350,6 +351,10 @@ const PurchaseBill = () => {
                 <div className="col-12">
                     <label className="block mb-2 font-medium">Purchase Rate</label>
                     <InputNumber value={newItem.purchase_rate} onValueChange={(e) => setNewItem({ ...newItem, purchase_rate: e.value })} mode="decimal" minFractionDigits={2} />
+                </div>
+                <div className="col-12">
+                    <label className="block mb-2 font-medium">Opening Stock</label>
+                    <InputNumber value={newItem.stock} onValueChange={(e) => setNewItem({ ...newItem, stock: e.value })} mode="decimal" minFractionDigits={2} />
                 </div>
             </Dialog>
 

@@ -6,100 +6,172 @@ const SalesPrint = forwardRef(({ data }, ref) => {
 
     const { bill_no, bill_date, party_name, items, sub_total, grand_total, remarks } = data;
 
+    // Default to template values if data is missing for preview
+    const farmerName = party_name || "Karsanbhai Patel";
+    const village = "Mota Varachha"; // This would come from DB in a real scenario
+    const mobile = "9XXXXXXXXX"; // This would come from DB in a real scenario
+    const discount = 0.00; // Hardcoded as per current logic, can be dynamic later
+    const netTotal = grand_total;
+    const paidAmount = grand_total; // Assuming full payment for cash
+    const balance = 0.00;
+
     return (
-        <div ref={ref} className="print-container" style={{ padding: '40px', fontFamily: 'Arial, sans-serif', color: '#000', backgroundColor: '#fff' }}>
+        <div ref={ref} className="print-container" style={{ padding: '20px', fontFamily: 'Courier New, monospace', color: '#000', backgroundColor: '#fff', width: '100%', maxWidth: '800px', margin: '0 auto' }}>
+
             {/* Header */}
-            <div style={{ textAlign: 'center', borderBottom: '2px solid #000', paddingBottom: '20px', marginBottom: '20px' }}>
-                <h1 style={{ margin: 0, fontSize: '30px', fontWeight: 'bold' }}>PURUSATH AGRO CENTER</h1>
-                <p style={{ margin: '5px 0', fontSize: '14px' }}>Main Market Yard, Shop No. 12, Amreli - 365601</p>
-                <p style={{ margin: '5px 0', fontSize: '14px' }}>Mo: +91 98765 43210 | Email: contact@purusathagro.com</p>
-                <p style={{ margin: '5px 0', fontSize: '16px', fontWeight: 'bold' }}>GSTIN: 24ABCDE1234F1Z5</p>
+            <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+                <h1 style={{ margin: '0 0 5px 0', fontSize: '24px', fontWeight: 'bold', textTransform: 'uppercase' }}>SHREE AGRO CENTER</h1>
+                <p style={{ margin: '0 0 5px 0', fontSize: '14px' }}>Seeds • Fertilizer • Pesticides</p>
+                <p style={{ margin: '0', fontSize: '14px' }}>Main Road, Village : Jetpur</p>
+                <p style={{ margin: '2px 0', fontSize: '14px' }}>Mo : 98765 43210</p>
+                <div style={{ borderBottom: '1px dashed #000', margin: '10px 0' }}></div>
             </div>
 
-            {/* Bill Info */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', border: '1px solid #000', padding: '10px' }}>
+            {/* Bill Details */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '14px' }}>
                 <div style={{ width: '60%' }}>
-                    <p style={{ margin: '0 0 5px 0', fontSize: '14px', color: '#555' }}>Billed To:</p>
-                    <h3 style={{ margin: '0', fontSize: '18px' }}>{party_name}</h3>
-                    {/* Placeholder for standard customer fields if available in future */}
-                    <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>Amreli, Gujarat</p>
+                    <table style={{ width: '100%' }}>
+                        <tbody>
+                            <tr>
+                                <td style={{ width: '80px', fontWeight: 'bold' }}>Bill No</td>
+                                <td>: {bill_no}</td>
+                            </tr>
+                            <tr>
+                                <td style={{ fontWeight: 'bold' }}>Farmer</td>
+                                <td>: {farmerName}</td>
+                            </tr>
+                            <tr>
+                                <td style={{ fontWeight: 'bold' }}>Village</td>
+                                <td>: {village}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div style={{ width: '35%', textAlign: 'right', borderLeft: '1px solid #ccc', paddingLeft: '10px' }}>
-                    <p style={{ margin: '3px 0' }}><strong>Invoice No:</strong> <span style={{ color: 'red' }}>{bill_no}</span></p>
-                    <p style={{ margin: '3px 0' }}><strong>Date:</strong> {new Date(bill_date).toLocaleDateString()}</p>
-                    <p style={{ margin: '3px 0' }}><strong>Payment Mode:</strong> Cash/Credit</p>
+                <div style={{ width: '40%' }}>
+                    <table style={{ width: '100%' }}>
+                        <tbody>
+                            <tr>
+                                <td style={{ width: '60px', fontWeight: 'bold' }}>Date</td>
+                                <td>: {new Date(bill_date).toLocaleDateString()}</td>
+                            </tr>
+                            <tr>
+                                <td style={{ fontWeight: 'bold' }}>Mobile</td>
+                                <td>: {mobile}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
+
+            <div style={{ borderBottom: '1px dashed #000', marginBottom: '10px' }}></div>
 
             {/* Items Table */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px', fontSize: '14px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10px', fontSize: '14px' }}>
                 <thead>
-                    <tr style={{ backgroundColor: '#eee', borderBottom: '1px solid #000', borderTop: '1px solid #000' }}>
-                        <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #000', width: '5%' }}>Sr</th>
-                        <th style={{ padding: '8px', textAlign: 'left', border: '1px solid #000', width: '45%' }}>Product Description</th>
-                        <th style={{ padding: '8px', textAlign: 'center', border: '1px solid #000', width: '10%' }}>HSN</th>
-                        <th style={{ padding: '8px', textAlign: 'right', border: '1px solid #000', width: '10%' }}>Qty</th>
-                        <th style={{ padding: '8px', textAlign: 'right', border: '1px solid #000', width: '10%' }}>Rate</th>
-                        <th style={{ padding: '8px', textAlign: 'right', border: '1px solid #000', width: '20%' }}>Amount</th>
+                    <tr style={{ textAlign: 'left' }}>
+                        <th style={{ padding: '5px', borderBottom: '1px dashed #000', width: '5%' }}>No</th>
+                        <th style={{ padding: '5px', borderBottom: '1px dashed #000', width: '50%' }}>Item Name</th>
+                        <th style={{ padding: '5px', borderBottom: '1px dashed #000', textAlign: 'center', width: '10%' }}>Qty</th>
+                        <th style={{ padding: '5px', borderBottom: '1px dashed #000', textAlign: 'right', width: '15%' }}>Rate</th>
+                        <th style={{ padding: '5px', borderBottom: '1px dashed #000', textAlign: 'right', width: '20%' }}>Amount</th>
                     </tr>
                 </thead>
                 <tbody>
                     {items && items.map((item, index) => (
                         <tr key={index}>
-                            <td style={{ padding: '8px', border: '1px solid #000', textAlign: 'center' }}>{index + 1}</td>
-                            <td style={{ padding: '8px', border: '1px solid #000' }}>{item.item_name || item.name}</td>
-                            <td style={{ padding: '8px', border: '1px solid #000', textAlign: 'center' }}>-</td>
-                            <td style={{ padding: '8px', border: '1px solid #000', textAlign: 'right' }}>{item.qty} {item.unit}</td>
-                            <td style={{ padding: '8px', border: '1px solid #000', textAlign: 'right' }}>{parseFloat(item.rate).toFixed(2)}</td>
-                            <td style={{ padding: '8px', border: '1px solid #000', textAlign: 'right' }}>{parseFloat(item.amount).toFixed(2)}</td>
+                            <td style={{ padding: '5px' }}>{index + 1}</td>
+                            <td style={{ padding: '5px' }}>{item.item_name || item.name}</td>
+                            <td style={{ padding: '5px', textAlign: 'center' }}>{item.qty} {item.unit}</td>
+                            <td style={{ padding: '5px', textAlign: 'right' }}>{parseFloat(item.rate).toFixed(2)}</td>
+                            <td style={{ padding: '5px', textAlign: 'right' }}>{parseFloat(item.amount).toFixed(2)}</td>
                         </tr>
                     ))}
-                    {/* Fill empty rows to maintain layout consistency if needed */}
                 </tbody>
             </table>
 
-            {/* Summary Section */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '40px' }}>
-                <div style={{ width: '40%' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px', borderBottom: '1px solid #ccc' }}>
-                        <span>Sub Total:</span>
-                        <span>₹{parseFloat(sub_total || 0).toFixed(2)}</span>
+            <div style={{ borderBottom: '1px dashed #000', marginBottom: '10px' }}></div>
+
+            {/* Totals */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px', fontSize: '14px' }}>
+                <div style={{ width: '50%' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+                        <span>Sub Total :</span>
+                        <span>{parseFloat(sub_total || 0).toFixed(2)}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px', borderBottom: '1px solid #ccc' }}>
-                        <span>SGST (0%):</span>
-                        <span>₹0.00</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+                        <span>Discount :</span>
+                        <span>{discount.toFixed(2)}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px', borderBottom: '1px solid #ccc' }}>
-                        <span>CGST (0%):</span>
-                        <span>₹0.00</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', backgroundColor: '#f9f9f9', border: '1px solid #000', marginTop: '10px' }}>
-                        <span style={{ fontWeight: 'bold', fontSize: '18px' }}>Grand Total:</span>
-                        <span style={{ fontWeight: 'bold', fontSize: '18px' }}>₹{parseFloat(grand_total || 0).toFixed(2)}</span>
-                    </div>
-                    <div style={{ marginTop: '5px', fontSize: '12px', fontStyle: 'italic', textAlign: 'right' }}>
-                        (Values in Rupees)
+                    <div style={{ borderBottom: '1px dashed #000', margin: '5px 0' }}></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', fontWeight: 'bold' }}>
+                        <span>Net Total :</span>
+                        <span>{parseFloat(netTotal || 0).toFixed(2)}</span>
                     </div>
                 </div>
             </div>
 
+            <div style={{ borderBottom: '1px dashed #000', marginBottom: '10px' }}></div>
+
+            {/* Payment Info */}
+            <div style={{ marginBottom: '10px', fontSize: '14px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+                    <span>Payment Mode : {data.payment_mode || 'Cash'}</span>
+                    <span>Paid Amount : {parseFloat(paidAmount || 0).toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '2px 0' }}>
+                    <span>Balance : {balance.toFixed(2)}</span>
+                </div>
+            </div>
+
+            <div style={{ borderBottom: '1px dashed #000', marginBottom: '10px' }}></div>
+
+            <div style={{ marginBottom: '20px', fontSize: '14px', fontStyle: 'italic' }}>
+                <b>Amount in Words:</b> {numberToWords(Math.round(netTotal))} Rupees Only
+            </div>
+
             {/* Footer Signatures */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '60px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '40px', fontSize: '14px' }}>
                 <div style={{ textAlign: 'center' }}>
-                    <p style={{ textDecoration: 'underline' }}>Terms & Conditions:</p>
-                    <ul style={{ textAlign: 'left', fontSize: '12px', paddingLeft: '20px' }}>
-                        <li>Goods once sold will not be taken back.</li>
-                        <li>Subject to Amreli Jurisdiction.</li>
-                    </ul>
+                    <p style={{ marginTop: '30px', borderTop: '1px solid #000', width: '150px', margin: '30px auto 0 auto' }}>Receiver's Signature</p>
                 </div>
-                <div style={{ textAlign: 'center', width: '250px' }}>
-                    <p>For, Purusath Agro Center</p>
-                    <br /><br /><br />
-                    <p style={{ borderTop: '1px solid #000' }}>Authorised Signatory</p>
+                <div style={{ textAlign: 'center' }}>
+                    <p style={{ marginTop: '30px', borderTop: '1px solid #000', width: '150px', margin: '30px auto 0 auto' }}>Authorized Signatory</p>
                 </div>
+            </div>
+
+            <div style={{ borderBottom: '1px dashed #000', margin: '20px 0' }}></div>
+
+            {/* Footer Slogan */}
+            <div style={{ textAlign: 'center', fontSize: '14px' }}>
+                <p style={{ margin: '5px 0', fontWeight: 'bold', color: 'green' }}>💚 ખેતી એ દેશની શાન છે 💚</p>
+                <p style={{ margin: '5px 0' }}>Thank You! Visit Again</p>
             </div>
         </div>
     );
 });
+
+// Simple Number to Words Converter for Indian Currency
+function numberToWords(num) {
+    if (num === 0) return "Zero";
+
+    const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
+    const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+    const regex = /^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/;
+
+    const getLT20 = (n) => a[Number(n)];
+    const getGT20 = (n) => b[n[0]] + ' ' + a[n[1]];
+
+    function num2words(n) {
+        if (n < 20) return getLT20(n);
+        if (n < 100) return getGT20(n.toString());
+        if (n < 1000) return num2words(Math.floor(n / 100)) + 'Hundred ' + num2words(n % 100);
+        if (n < 100000) return num2words(Math.floor(n / 1000)) + 'Thousand ' + num2words(n % 1000);
+        if (n < 10000000) return num2words(Math.floor(n / 100000)) + 'Lakh ' + num2words(n % 100000);
+        return num2words(Math.floor(n / 10000000)) + 'Crore ' + num2words(n % 10000000);
+    }
+
+    return num2words(num);
+}
 
 export default SalesPrint;
