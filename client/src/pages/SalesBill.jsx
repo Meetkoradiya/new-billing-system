@@ -61,7 +61,7 @@ const SalesBill = () => {
 
         try {
             const itemRes = await getItems();
-            console.log("Items API Response:", itemRes);
+            console.log("Items API Response (Full Data):", JSON.stringify(itemRes.data, null, 2));
             if (Array.isArray(itemRes.data)) {
                 setProductList(itemRes.data);
                 if (itemRes.data.length === 0) {
