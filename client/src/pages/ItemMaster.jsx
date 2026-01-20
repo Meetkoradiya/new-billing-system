@@ -147,7 +147,6 @@ const ItemMaster = () => {
                     <div className="col-12 md:col-6">
                         <label htmlFor="itemCompany" className="block mb-2 font-medium">Company / Brand</label>
                         <Dropdown
-                            id="itemCompany"
                             inputId="itemCompany"
                             name="itemCompany"
                             value={formData.company}
@@ -163,7 +162,6 @@ const ItemMaster = () => {
                     <div className="col-12 md:col-4">
                         <label htmlFor="itemCategory" className="block mb-2 font-medium">Category</label>
                         <Dropdown
-                            id="itemCategory"
                             inputId="itemCategory"
                             name="itemCategory"
                             value={formData.category}
@@ -179,7 +177,6 @@ const ItemMaster = () => {
                     <div className="col-12 md:col-4">
                         <label htmlFor="itemUnit" className="block mb-2 font-medium">Unit</label>
                         <Dropdown
-                            id="itemUnit"
                             inputId="itemUnit"
                             name="itemUnit"
                             value={formData.unit}
@@ -190,16 +187,15 @@ const ItemMaster = () => {
                     </div>
                     <div className="col-12 md:col-6">
                         <label htmlFor="itemPurchaseRate" className="block mb-2 font-medium">Purchase Rate</label>
-                        <InputNumber id="itemPurchaseRate" inputId="itemPurchaseRate" name="itemPurchaseRate" value={formData.purchase_rate} onValueChange={(e) => setFormData({ ...formData, purchase_rate: e.value })} mode="decimal" minFractionDigits={2} />
+                        <InputNumber inputId="itemPurchaseRate" name="itemPurchaseRate" value={formData.purchase_rate} onValueChange={(e) => setFormData({ ...formData, purchase_rate: e.value })} mode="decimal" minFractionDigits={2} />
                     </div>
                     <div className="col-12 md:col-6">
                         <label htmlFor="itemStock" className="block mb-2 font-medium">Opening Stock</label>
-                        <InputNumber id="itemStock" inputId="itemStock" name="itemStock" value={formData.stock} onValueChange={(e) => setFormData({ ...formData, stock: e.value })} mode="decimal" minFractionDigits={2} />
+                        <InputNumber inputId="itemStock" name="itemStock" value={formData.stock} onValueChange={(e) => setFormData({ ...formData, stock: e.value })} mode="decimal" minFractionDigits={2} />
                     </div>
                     <div className="col-12 md:col-6">
                         <label htmlFor="itemGst" className="block mb-2 font-medium">GST %</label>
                         <Dropdown
-                            id="itemGst"
                             inputId="itemGst"
                             name="itemGst"
                             value={formData.gst_percent}
@@ -215,7 +211,7 @@ const ItemMaster = () => {
                 <div className="grid p-fluid">
                     <div className="col-12">
                         <label htmlFor="stockQty" className="block mb-2 font-medium">Quantity to Add</label>
-                        <InputNumber id="stockQty" inputId="stockQty" name="stockQty" value={stockUpdateData.qty} onValueChange={(e) => setStockUpdateData({ ...stockUpdateData, qty: e.value })} mode="decimal" showButtons min={0} autoFocus />
+                        <InputNumber inputId="stockQty" name="stockQty" value={stockUpdateData.qty} onValueChange={(e) => setStockUpdateData({ ...stockUpdateData, qty: e.value })} mode="decimal" showButtons min={0} autoFocus />
                     </div>
                 </div>
             </Dialog>

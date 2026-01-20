@@ -5,6 +5,8 @@ import { Chart } from 'primereact/chart';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Tag } from 'primereact/tag';
+import { Button } from 'primereact/button';
+import { Calendar } from 'primereact/calendar';
 
 const PaymentReport = () => {
     const [stats, setStats] = useState({
@@ -15,14 +17,37 @@ const PaymentReport = () => {
     const [chartData, setChartData] = useState({});
     const [chartOptions, setChartOptions] = useState({});
 
+    // Date Filter State
+    const [dates, setDates] = useState(null);
+
     useEffect(() => {
-        fetchPaymentStats();
-        fetchTransactions();
+        // Initial load without filter (or default to current month/year if preferred)
+        fetchData();
     }, []);
 
-    const fetchPaymentStats = async () => {
+    const fetchData = async () => {
+        let params = {};
+        if (dates && dates[0] && dates[1]) {
+            // Adjust for timezone offset to ensure correct date is sent
+            const formatDate = (date) => {
+                const offset = date.getTimezoneOffset();
+                const adjustedDate = new Date(date.getTime() - (offset * 60 * 1000));
+                return adjustedDate.toISOString().split('T')[0];
+            };
+
+            params.startDate = formatDate(dates[0]);
+            params.endDate = formatDate(dates[1]);
+        }
+
+        await Promise.all([
+            fetchPaymentStats(params),
+            fetchTransactions(params)
+        ]);
+    };
+
+    const fetchPaymentStats = async (params) => {
         try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL}/reports/payments`);
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/reports/payments`, { params });
             setStats(res.data);
             initChart(res.data);
         } catch (error) {
@@ -30,9 +55,9 @@ const PaymentReport = () => {
         }
     };
 
-    const fetchTransactions = async () => {
+    const fetchTransactions = async (params) => {
         try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL}/sales`);
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/sales`, { params });
             setTransactions(res.data);
         } catch (error) {
             console.error(error);
@@ -86,7 +111,35 @@ const PaymentReport = () => {
 
     return (
         <div className="surface-ground">
-            <h2 className="text-2xl font-bold mb-4">Payment Analysis (Cash vs Debit)</h2>
+            <div className="flex justify-content-between align-items-center mb-4">
+                <h2 className="text-2xl font-bold m-0">Payment Analysis (Cash vs Debit)</h2>
+                <div className="flex gap-2">
+                    <Calendar
+                        inputId="filter_date_range"
+                        name="filter_date_range"
+                        value={dates}
+                        onChange={(e) => setDates(e.value)}
+                        selectionMode="range"
+                        readOnlyInput
+                        placeholder="Select Date Range"
+                        showIcon
+                    />
+                    <Button label="Filter" icon="pi pi-filter" onClick={fetchData} />
+                    <Button
+                        icon="pi pi-times"
+                        severity="secondary"
+                        onClick={() => {
+                            setDates(null);
+                            // Need to clear params, so calling fetchData with fresh state logic won't work immediately 
+                            // because state update is async.
+                            // We explicitly pass empty params here.
+                            fetchPaymentStats({});
+                            fetchTransactions({});
+                        }}
+                        tooltip="Clear Filter"
+                    />
+                </div>
+            </div>
 
             <div className="grid mb-4">
                 <div className="col-12 md:col-6 lg:col-6">
@@ -122,9 +175,10 @@ const PaymentReport = () => {
                 </div>
                 <div className="col-12 lg:col-8">
                     <div className="surface-card shadow-2 border-round p-4 h-full">
-                        <h3 className="text-xl font-medium mb-4">Recent Transactions</h3>
+                        <h3 className="text-xl font-medium mb-4">Transactions List</h3>
                         <DataTable value={transactions} paginator rows={5} stripedRows>
                             <Column field="bill_no" header="Bill No" sortable></Column>
+                            <Column field="bill_date" header="Date" body={(row) => new Date(row.bill_date).toLocaleDateString()} sortable></Column>
                             <Column field="party_name" header="Farmer Name" sortable></Column>
                             <Column field="payment_mode" header="Mode" body={modeTemplate} sortable></Column>
                             <Column field="grand_total" header="Amount" body={amountTemplate} sortable className="text-right"></Column>

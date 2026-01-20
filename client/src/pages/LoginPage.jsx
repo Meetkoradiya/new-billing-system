@@ -79,7 +79,8 @@ const LoginPage = ({ setAuth }) => {
                     <div className="field mb-6">
                         <span className="p-float-label">
                             <Password
-                                id="password"
+                                inputId="password"
+                                name="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 toggleMask

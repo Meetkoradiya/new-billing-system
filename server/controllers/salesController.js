@@ -54,12 +54,22 @@ exports.createSale = async (req, res) => {
 // Get All Sales Headers
 exports.getAllSales = async (req, res) => {
     try {
-        const [rows] = await db.query(`
+        const { startDate, endDate } = req.query;
+        let query = `
             SELECT s.*, a.name as party_name 
             FROM sales_head s 
             JOIN accounts a ON s.account_id = a.id 
-            ORDER BY s.bill_date DESC`
-        );
+        `;
+        const params = [];
+
+        if (startDate && endDate) {
+            query += ` WHERE s.bill_date BETWEEN ? AND ? `;
+            params.push(startDate, endDate);
+        }
+
+        query += ` ORDER BY s.bill_date DESC`;
+
+        const [rows] = await db.query(query, params);
         res.json(rows);
     } catch (error) {
         res.status(500).json({ message: error.message });

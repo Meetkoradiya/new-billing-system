@@ -286,12 +286,11 @@ const PurchaseBill = () => {
                 </div>
                 <div className="col-12 md:col-4">
                     <label htmlFor="pb_billDate" className="block mb-2 font-bold">Bill Date</label>
-                    <Calendar id="pb_billDate" inputId="pb_billDate" name="pb_billDate" value={billDate} onChange={(e) => setBillDate(e.value)} showIcon />
+                    <Calendar inputId="pb_billDate" name="pb_billDate" value={billDate} onChange={(e) => setBillDate(e.value)} showIcon />
                 </div>
                 <div className="col-12 md:col-4">
                     <label htmlFor="pb_party" className="block mb-2 font-bold">Company / Supplier</label>
                     <Dropdown
-                        id="pb_party"
                         inputId="pb_party"
                         name="pb_party"
                         value={selectedParty}
@@ -344,7 +343,6 @@ const PurchaseBill = () => {
                 <div className="col-12">
                     <label htmlFor="pd_company" className="block mb-2 font-medium">Company / Brand</label>
                     <Dropdown
-                        id="pd_company"
                         inputId="pd_company"
                         name="pd_company"
                         value={newItem.company}
@@ -360,19 +358,19 @@ const PurchaseBill = () => {
                 </div>
                 <div className="col-6">
                     <label htmlFor="pd_category" className="block mb-2 font-medium">Category</label>
-                    <Dropdown id="pd_category" inputId="pd_category" name="pd_category" value={newItem.category} options={['Pesticide', 'Seeds']} onChange={(e) => setNewItem({ ...newItem, category: e.value })} placeholder="Select Category" />
+                    <Dropdown inputId="pd_category" name="pd_category" value={newItem.category} options={['Pesticide', 'Seeds']} onChange={(e) => setNewItem({ ...newItem, category: e.value })} placeholder="Select Category" />
                 </div>
                 <div className="col-6">
                     <label htmlFor="pd_unit" className="block mb-2 font-medium">Unit</label>
-                    <Dropdown id="pd_unit" inputId="pd_unit" name="pd_unit" value={newItem.unit} options={['Nos', 'Kg', 'Ltr', 'Box', 'Bag']} onChange={(e) => setNewItem({ ...newItem, unit: e.value })} placeholder="Select Unit" />
+                    <Dropdown inputId="pd_unit" name="pd_unit" value={newItem.unit} options={['Nos', 'Kg', 'Ltr', 'Box', 'Bag']} onChange={(e) => setNewItem({ ...newItem, unit: e.value })} placeholder="Select Unit" />
                 </div>
                 <div className="col-12">
                     <label htmlFor="pd_purchase_rate" className="block mb-2 font-medium">Purchase Rate</label>
-                    <InputNumber id="pd_purchase_rate" inputId="pd_purchase_rate" name="pd_purchase_rate" value={newItem.purchase_rate} onValueChange={(e) => setNewItem({ ...newItem, purchase_rate: e.value })} mode="decimal" minFractionDigits={2} />
+                    <InputNumber inputId="pd_purchase_rate" name="pd_purchase_rate" value={newItem.purchase_rate} onValueChange={(e) => setNewItem({ ...newItem, purchase_rate: e.value })} mode="decimal" minFractionDigits={2} />
                 </div>
                 <div className="col-12">
                     <label htmlFor="pd_stock" className="block mb-2 font-medium">Opening Stock</label>
-                    <InputNumber id="pd_stock" inputId="pd_stock" name="pd_stock" value={newItem.stock} onValueChange={(e) => setNewItem({ ...newItem, stock: e.value })} mode="decimal" minFractionDigits={2} />
+                    <InputNumber inputId="pd_stock" name="pd_stock" value={newItem.stock} onValueChange={(e) => setNewItem({ ...newItem, stock: e.value })} mode="decimal" minFractionDigits={2} />
                 </div>
             </Dialog>
 

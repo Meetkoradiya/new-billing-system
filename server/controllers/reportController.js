@@ -32,14 +32,24 @@ exports.getStockSummary = async (req, res) => {
 
 exports.getPaymentStats = async (req, res) => {
     try {
-        const [rows] = await db.query(`
+        const { startDate, endDate } = req.query;
+        let query = `
             SELECT 
                 payment_mode, 
                 COUNT(*) as count, 
                 SUM(grand_total) as total_amount 
             FROM sales_head 
-            GROUP BY payment_mode
-        `);
+        `;
+        const params = [];
+
+        if (startDate && endDate) {
+            query += ` WHERE bill_date BETWEEN ? AND ? `;
+            params.push(startDate, endDate);
+        }
+
+        query += ` GROUP BY payment_mode`;
+
+        const [rows] = await db.query(query, params);
 
         let stats = {
             cash: { count: 0, total: 0 },

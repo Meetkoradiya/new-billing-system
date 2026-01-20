@@ -101,7 +101,6 @@ const PartyMaster = () => {
                     <div className="col-12 md:col-6">
                         <label htmlFor="partyType" className="block mb-2 font-medium">Type</label>
                         <Dropdown
-                            id="partyType"
                             inputId="partyType"
                             name="partyType"
                             value={formData.group_id}
