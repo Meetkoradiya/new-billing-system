@@ -14,6 +14,7 @@ export const getItems = () => api.get('/items');
 export const createItem = (data) => api.post('/items', data);
 export const searchItems = (query) => api.get(`/items/search?query=${query}`);
 export const updateItemStock = (id, qty) => api.put(`/items/${id}/stock`, { qty });
+export const updateItem = (id, data) => api.put(`/items/${id}`, data);
 export const deleteItem = (id) => api.delete(`/items/${id}`);
 
 export const createSale = (data) => api.post('/sales', data);
@@ -21,5 +22,9 @@ export const getSales = () => api.get('/sales');
 
 export const createPurchase = (data) => api.post('/purchase', data);
 export const getPurchases = () => api.get('/purchase');
+
+export const createReceipt = (data) => api.post('/payments/receipt', data);
+export const createPayment = (data) => api.post('/payments/payment', data);
+export const getPayments = () => api.get('/payments');
 
 export default api;

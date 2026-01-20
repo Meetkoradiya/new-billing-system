@@ -1,74 +1,180 @@
 :root {
-  --primary-color: #0078d4;
-  --secondary-color: #f3f2f1;
-  --text-color: #201f1e;
-  --font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --primary-color: #4f46e5;
+  /* Indigo 600 - More modern than standard blue */
+  --primary-dark: #4338ca;
+  --secondary-color: #f8fafc;
+  /* Slate 50 */
+  --surface-ground: #f1f5f9;
+  --text-color: #0f172a;
+  /* Slate 900 */
+  --text-secondary: #64748b;
+  /* Slate 500 */
+
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  --border-radius: 12px;
+  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --glass-bg: rgba(255, 255, 255, 0.95);
 }
 
 body {
-  font-family: var(--font-family);
-  background-color: var(--secondary-color);
+  font-family: var(--font-body);
+  background-color: var(--surface-ground);
   color: var(--text-color);
   font-size: 14px;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Custom Scrollbar for better UX */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  color: var(--text-color);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
+  background: #cbd5e1;
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: #94a3b8;
 }
 
-/* PrimeReact Overrides for cleaner look */
-.p-sidebar {
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1) !important;
+/* PrimeReact Theme Overrides for Professional Look */
+
+.p-component {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
 }
 
+/* Cards */
+.surface-card,
+.p-card {
+  background: #ffffff;
+  border-radius: var(--border-radius) !important;
+  box-shadow: var(--card-shadow) !important;
+  border: 1px solid #e2e8f0;
+}
+
+.surface-0 {
+  background-color: #ffffff !important;
+}
+
+/* Inputs */
 .p-inputtext,
 .p-dropdown,
-.p-inputnumber-input {
-  font-size: 0.9rem !important;
+.p-inputnumber-input,
+.p-calendar-input {
+  border-radius: 8px !important;
+  padding: 0.75rem 1rem !important;
+  border-color: #e2e8f0;
+  transition: all 0.2s;
+}
+
+.p-inputtext:enabled:focus,
+.p-dropdown:not(.p-disabled).p-focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2) !important;
+}
+
+/* Buttons */
+.p-button {
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-family: var(--font-heading);
+  padding: 0.6rem 1.2rem !important;
+  transition: transform 0.1s;
+}
+
+.p-button:active {
+  transform: translateY(1px);
+}
+
+.p-button.p-button-primary {
+  background: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+.p-button.p-button-secondary {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+.p-button.p-button-danger.p-button-text {
+  color: #ef4444 !important;
+}
+
+/* DataTable */
+.p-datatable .p-datatable-header {
+  background: transparent;
+  border: none;
+  padding: 1rem 1.5rem;
 }
 
 .p-datatable .p-datatable-thead>tr>th {
-  background-color: #f8f9fa !important;
-  color: #495057 !important;
+  background: #f8fafc !important;
+  color: #475569 !important;
   font-weight: 600 !important;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  padding: 1rem !important;
+  border-bottom: 1px solid #e2e8f0 !important;
 }
 
-.p-button {
-  font-weight: 600 !important;
+.p-datatable .p-datatable-tbody>tr>td {
+  padding: 1rem !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  color: #334155;
 }
 
-/* Card Hover Effect */
-.surface-card {
-  transition: box-shadow 0.2s;
+.p-datatable .p-datatable-tbody>tr:hover {
+  background-color: #f8fafc !important;
 }
 
-/* Responsive Utilities */
-@media screen and (max-width: 960px) {
-  .p-datatable .p-datatable-tbody>tr>td {
-    text-align: left;
-    display: block;
-    width: 100% !important;
-    float: left;
-    clear: left;
-    border: none;
-  }
+/* Dialogs */
+.p-dialog .p-dialog-header {
+  border-top-left-radius: var(--border-radius);
+  border-top-right-radius: var(--border-radius);
+  padding: 1.5rem;
+}
 
-  .p-datatable .p-datatable-thead>tr>th {
-    display: none !important;
-  }
+.p-dialog .p-dialog-content {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+/* Utilities */
+.text-primary {
+  color: var(--primary-color) !important;
+}
+
+.bg-primary {
+  background-color: var(--primary-color) !important;
+}
+
+/* Dashboard Stat Cards */
+.stat-card-icon {
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--primary-color);
+  border-radius: 12px;
+  padding: 1rem;
 }

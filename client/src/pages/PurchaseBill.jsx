@@ -68,36 +68,49 @@ const PurchaseBill = () => {
     };
 
     const handleRowChange = (index, field, value) => {
-        const newRows = [...rows];
-        newRows[index][field] = value;
+        setRows(prevRows => {
+            return prevRows.map((row, i) => {
+                if (i !== index) return row;
 
-        // Logic for item selection
-        if (field === 'item_id') {
-            const item = productList.find(p => p.id === value); // value is id here from Dropdown
-            if (item) {
-                newRows[index].rate = item.purchase_rate;
-                newRows[index].unit = item.unit;
-                newRows[index].name = item.name;
-            }
-        }
+                const updatedRow = { ...row, [field]: value };
 
-        // Calc Amount
-        if (field === 'qty' || field === 'rate' || field === 'item_id') {
-            const qty = parseFloat(newRows[index].qty) || 0;
-            const rate = parseFloat(newRows[index].rate) || 0;
-            newRows[index].amount = qty * rate;
-        }
+                // Logic for item selection
+                if (field === 'item_id') {
+                    const item = productList.find(p => p.id === value);
+                    if (item) {
+                        updatedRow.rate = item.purchase_rate;
+                        updatedRow.unit = item.unit;
+                        updatedRow.name = item.name;
+                    }
+                }
 
-        setRows(newRows);
+                // Calc Amount
+                if (field === 'qty' || field === 'rate' || field === 'item_id') {
+                    const qty = parseFloat(updatedRow.qty) || 0;
+                    const rate = parseFloat(updatedRow.rate) || 0;
+                    updatedRow.amount = qty * rate;
+                }
+
+                return updatedRow;
+            });
+        });
     };
 
     const addRow = () => {
-        setRows([...rows, { id: rows.length + 1, item_id: '', qty: 1, rate: 0, amount: 0, unit: '', name: '' }]);
+        setRows(prevRows => {
+            const newId = prevRows.length > 0 ? Math.max(...prevRows.map(r => r.id)) + 1 : 1;
+            return [...prevRows, { id: newId, item_id: '', qty: 1, rate: 0, amount: 0, unit: '', name: '' }];
+        });
     };
 
     const removeRow = (rowData) => {
-        const newRows = rows.filter(r => r.id !== rowData.id);
-        setRows(newRows);
+        setRows(prevRows => {
+            if (prevRows.length === 1) {
+                // Don't allow empty list, just reset the last row
+                return [{ id: 1, item_id: '', qty: 1, rate: 0, amount: 0, unit: '', name: '' }];
+            }
+            return prevRows.filter(r => r.id !== rowData.id);
+        });
     };
 
     const calculateTotal = () => {
@@ -133,8 +146,9 @@ const PurchaseBill = () => {
             toast.current.show({ severity: 'warn', summary: 'Missing Info', detail: 'Select Supplier / Company' });
             return;
         }
-        if (rows.length === 0 || !rows[0].item_id) {
-            toast.current.show({ severity: 'warn', summary: 'Missing Info', detail: 'Add at least one item' });
+        const validRows = rows.filter(r => r.item_id);
+        if (validRows.length === 0) {
+            toast.current.show({ severity: 'warn', summary: 'Missing Info', detail: 'Add at least one valid item' });
             return;
         }
 
@@ -145,7 +159,7 @@ const PurchaseBill = () => {
                 bill_date: billDate.toISOString().split('T')[0],
                 account_id: selectedParty.id,
                 remarks,
-                items: rows.filter(r => r.item_id).map(r => ({
+                items: validRows.map(r => ({
                     item_id: r.item_id,
                     qty: r.qty,
                     rate: r.rate,
@@ -211,7 +225,7 @@ const PurchaseBill = () => {
                     name={`pb_item_${rowIndex}`}
                     aria-label="Select Item"
                     value={rowData.item_id}
-                    options={productList.filter(p => !selectedParty || !p.company || p.company.toLowerCase().includes(selectedParty.name.toLowerCase()) || selectedParty.name.toLowerCase().includes(p.company.toLowerCase()))}
+                    options={productList}
                     optionLabel="name"
                     optionValue="id"
                     onChange={(e) => handleRowChange(rowIndex, 'item_id', e.value)}
@@ -299,7 +313,25 @@ const PurchaseBill = () => {
                         onChange={(e) => setSelectedParty(e.value)}
                         placeholder="Select Company"
                         filter
+                        className="w-full"
+                        itemTemplate={(option) => (
+                            <div className="flex align-items-center justify-content-between">
+                                <span>{option.name}</span>
+                                <span className={`text-sm font-bold ${option.balance > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                    {Math.abs(option.balance || 0).toFixed(2)} {option.balance > 0 ? 'Cr' : 'Dr'}
+                                </span>
+                            </div>
+                        )}
                     />
+                    {selectedParty && (
+                        <div className="mt-2 text-right">
+                            <span className="text-sm bg-gray-100 p-1 border-round">
+                                Current Bal: <span className={`font-bold ${selectedParty.balance > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                    ₹{Math.abs(selectedParty.balance || 0).toFixed(2)} {selectedParty.balance > 0 ? 'Cr (Payable)' : 'Dr (Advance)'}
+                                </span>
+                            </span>
+                        </div>
+                    )}
                 </div>
             </div>
 

@@ -2,6 +2,10 @@
 -- COMPLETE AGRO BILLING SYSTEM DATABASE SCHEMA
 -- ==========================================
 
+DROP DATABASE IF EXISTS agro_billing;
+CREATE DATABASE IF NOT EXISTS agro_billing;
+USE agro_billing;
+
 -- 1. USERS
 DROP TABLE IF EXISTS users;
 CREATE TABLE users (
@@ -24,6 +28,7 @@ CREATE TABLE accounts (
     address TEXT,
     city VARCHAR(100),
     gst_number VARCHAR(20),
+    balance DECIMAL(15,2) DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
@@ -152,7 +157,20 @@ CREATE TABLE purchase_return_detail (
     CONSTRAINT fk_purchase_return_item FOREIGN KEY (item_id) REFERENCES items(id) ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- 8. EXPENSES
+-- 8. EXTENSIONS
+DROP TABLE IF EXISTS payments;
+CREATE TABLE payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    payment_date DATE NOT NULL,
+    account_id INT NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    payment_mode VARCHAR(20) DEFAULT 'Cash',
+    type ENUM('receipt', 'payment') NOT NULL DEFAULT 'receipt',
+    remarks TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
 DROP TABLE IF EXISTS expenses;
 CREATE TABLE expenses (
     id INT AUTO_INCREMENT PRIMARY KEY,

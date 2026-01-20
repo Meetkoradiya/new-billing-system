@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getItems, createItem, getAccounts, updateItemStock, deleteItem } from '../services/api'; // getAccounts added
+import { getItems, createItem, updateItem, getAccounts, updateItemStock, deleteItem } from '../services/api';
 
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -8,7 +8,7 @@ import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from 'primereact/inputnumber';
 import { Dropdown } from 'primereact/dropdown';
-import { Toast } from 'primereact/toast'; // Added Toast
+import { Toast } from 'primereact/toast';
 
 const ItemMaster = () => {
     const [items, setItems] = useState([]);
@@ -55,14 +55,33 @@ const ItemMaster = () => {
         }
     };
 
+    const handleAddNew = () => {
+        setFormData({ name: '', company: '', category: '', code: '', unit: 'Nos', purchase_rate: 0, gst_percent: 0, stock: 0 });
+        setShowForm(true);
+    };
+
+    const handleEdit = (rowData) => {
+        setFormData({ ...rowData });
+        setShowForm(true);
+    };
+
     const handleSubmit = async () => {
         try {
-            await createItem(formData);
+            if (formData.id) {
+                // Update
+                await updateItem(formData.id, formData);
+                toast.current.show({ severity: 'success', summary: 'Success', detail: 'Item Updated Successfully' });
+            } else {
+                // Create
+                await createItem(formData);
+                toast.current.show({ severity: 'success', summary: 'Success', detail: 'Item Created Successfully' });
+            }
             setShowForm(false);
             setFormData({ name: '', company: '', category: '', code: '', unit: 'Nos', purchase_rate: 0, gst_percent: 0, stock: 0 });
             fetchItems();
         } catch (error) {
-            alert('Error creating item');
+            console.error(error);
+            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Failed to save item' });
         }
     };
 
@@ -112,6 +131,7 @@ const ItemMaster = () => {
     const actionTemplate = (rowData) => {
         return (
             <div className="flex gap-2">
+                <Button icon="pi pi-pencil" rounded outlined severity="info" tooltip="Edit Item" onClick={() => handleEdit(rowData)} />
                 <Button icon="pi pi-plus" rounded outlined severity="success" tooltip="Add Stock" onClick={() => openStockDialog(rowData)} />
                 <Button icon="pi pi-trash" rounded outlined severity="danger" tooltip="Delete Item" onClick={() => handleDelete(rowData)} />
             </div>
@@ -123,7 +143,7 @@ const ItemMaster = () => {
             <Toast ref={toast} />
             <div className="flex justify-content-between align-items-center mb-4">
                 <h2 className="text-xl font-bold m-0">Item Master</h2>
-                <Button label="Add New Item" icon="pi pi-plus" onClick={() => setShowForm(true)} />
+                <Button label="Add New Item" icon="pi pi-plus" onClick={handleAddNew} />
             </div>
 
             <DataTable value={items} paginator rows={10} stripedRows showGridlines tableStyle={{ minWidth: '50rem' }}>
@@ -135,10 +155,10 @@ const ItemMaster = () => {
                 <Column field="purchase_rate" header="Pur. Rate" sortable className="text-right"></Column>
                 <Column field="stock" header="Stock" sortable className="text-right"></Column>
                 <Column field="gst_percent" header="GST %" sortable className="text-right" body={(rowData) => `${rowData.gst_percent}%`}></Column>
-                <Column body={actionTemplate} header="Add Stock" style={{ width: '10%' }}></Column>
+                <Column body={actionTemplate} header="Actions" style={{ width: '15%' }}></Column>
             </DataTable>
 
-            <Dialog header="Add New Product" visible={showForm} style={{ width: '50vw' }} breakpoints={{ '960px': '75vw', '641px': '100vw' }} onHide={() => setShowForm(false)} footer={dialogFooter}>
+            <Dialog header={formData.id ? "Edit Product" : "Add New Product"} visible={showForm} style={{ width: '50vw' }} breakpoints={{ '960px': '75vw', '641px': '100vw' }} onHide={() => setShowForm(false)} footer={dialogFooter}>
                 <div className="grid p-fluid">
                     <div className="col-12 md:col-6">
                         <label htmlFor="itemName" className="block mb-2 font-medium">Item Name</label>
@@ -165,9 +185,10 @@ const ItemMaster = () => {
                             inputId="itemCategory"
                             name="itemCategory"
                             value={formData.category}
-                            options={['Pesticide', 'Seeds']}
+                            options={['Pesticide', 'Seeds', 'Pump', 'Spare Parts']}
                             onChange={(e) => setFormData({ ...formData, category: e.value })}
                             placeholder="Select Category"
+                            editable
                         />
                     </div>
                     <div className="col-12 md:col-4">
@@ -190,7 +211,7 @@ const ItemMaster = () => {
                         <InputNumber inputId="itemPurchaseRate" name="itemPurchaseRate" value={formData.purchase_rate} onValueChange={(e) => setFormData({ ...formData, purchase_rate: e.value })} mode="decimal" minFractionDigits={2} />
                     </div>
                     <div className="col-12 md:col-6">
-                        <label htmlFor="itemStock" className="block mb-2 font-medium">Opening Stock</label>
+                        <label htmlFor="itemStock" className="block mb-2 font-medium">Stock (Qty)</label>
                         <InputNumber inputId="itemStock" name="itemStock" value={formData.stock} onValueChange={(e) => setFormData({ ...formData, stock: e.value })} mode="decimal" minFractionDigits={2} />
                     </div>
                     <div className="col-12 md:col-6">

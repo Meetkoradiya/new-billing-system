@@ -132,10 +132,8 @@ const SalesBill = () => {
 
     const addRow = () => {
         setRows(prevRows => {
-            // Auto-clean: Filter out empty rows
-            const cleanedRows = prevRows.filter(r => r.name || r.item_id);
-            const newId = cleanedRows.length > 0 ? Math.max(...cleanedRows.map(r => r.id)) + 1 : 1;
-            return [...cleanedRows, { id: newId, item_id: '', qty: 1, rate: 0, amount: 0, unit: '', name: '' }];
+            const newId = prevRows.length > 0 ? Math.max(...prevRows.map(r => r.id)) + 1 : 1;
+            return [...prevRows, { id: newId, item_id: '', qty: 1, rate: 0, amount: 0, unit: '', name: '' }];
         });
     };
 
@@ -270,6 +268,9 @@ const SalesBill = () => {
                 bill_no: billNo,
                 bill_date: billDate,
                 party_name: selectedParty.name,
+                party_mobile: selectedParty.mobile,
+                party_city: selectedParty.city,
+                party_address: selectedParty.address,
                 payment_mode: paymentMode,
                 items: printItems,
                 sub_total: total,
@@ -362,14 +363,14 @@ const SalesBill = () => {
                     </div>
                 )}
                 onChange={(e) => handleRowChange(rowIndex, 'item_id', e.value)}
-                placeholder="Select or Type Item"
+                placeholder="Item Name (Search)"
                 filter
                 filterBy="name,code,company,label"
                 editable
-                className="w-full p-inputtext-sm"
+                className="w-full"
                 appendTo={document.body}
-                emptyMessage="આઈટમ મળી નથી. નવી આઈટમ ઉમેરવા માટે બોક્સમાં લખો."
-                emptyFilterMessage="આઈટમ મળી નથી. નવી આઈટમ ઉમેરવા માટે બોક્સમાં લખો."
+                emptyMessage="Item not found. Type to add new."
+                emptyFilterMessage="No results found"
                 tooltip="Select valid item or type new name"
             />
         );
@@ -410,196 +411,191 @@ const SalesBill = () => {
     };
 
     const amountTemplate = (rowData) => {
-        return parseFloat(rowData.amount).toFixed(2);
+        return <div className="font-bold text-gray-900">{parseFloat(rowData.amount).toFixed(2)}</div>;
     };
 
     const actionTemplate = (rowData) => (
-        <Button icon="pi pi-trash" rounded text severity="danger" aria-label="Delete" onClick={() => removeRow(rowData)} />
+        <Button icon="pi pi-trash" rounded text severity="danger" size="small" onClick={() => removeRow(rowData)} tooltip="Remove Row" />
     );
 
     return (
-        <div className="flex flex-column gap-3 p-2 md:p-4 fadein animation-duration-500">
+        <div className="flex flex-column gap-3 max-w-full fadein animation-duration-500">
             <Toast ref={toast} />
 
-            {/* Header / Top Bar */}
-            <div className="flex justify-content-between align-items-center surface-0 p-3 shadow-1 border-round">
+            {/* Top Bar */}
+            <div className="flex justify-content-between align-items-center surface-card p-3 border-round shadow-1">
                 <div className="flex align-items-center gap-3">
-                    <div className="bg-primary border-round p-2">
-                        <i className="pi pi-briefcase text-xl text-white"></i>
+                    <div className="bg-indigo-100 p-2 border-round">
+                        <i className="pi pi-receipt text-2xl text-primary"></i>
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold m-0 text-900">New Sales Invoice</h1>
-                        <span className="text-500 text-sm">Create a new bill for farmer/customer</span>
+                        <h1 className="text-xl font-bold m-0 text-900">New Sales Invoice</h1>
+                        <span className="text-500 text-sm">Create bill for farmer/customer</span>
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button label="Clear Form" icon="pi pi-eraser" severity="danger" text onClick={handleClear} />
-                    <Button label="Refresh Masters" icon="pi pi-sync" severity="help" text onClick={loadMasters} />
+                    <Button label="Reset" icon="pi pi-refresh" outlined severity="secondary" size="small" onClick={loadMasters} />
+                    <Button label="Clear" icon="pi pi-eraser" outlined severity="danger" size="small" onClick={handleClear} />
                 </div>
             </div>
 
             <div className="grid">
-                {/* Left: Bill To (Farmer) */}
-                <div className="col-12 md:col-7">
-                    <Card className="h-full border-1 surface-border shadow-none" title="Bill To (Farmer Details)">
-                        <div className="p-fluid">
-                            <label className="font-bold mb-2 block text-900" htmlFor="farmer_select">Select Farmer / customer</label>
-                            <Dropdown
-                                inputId="farmer_select"
-                                name="farmer_select"
-                                value={selectedParty}
-                                options={parties.filter(p => p.group_id === 1)}
-                                optionLabel="name"
-                                onChange={(e) => setSelectedParty(e.value)}
-                                placeholder="Search & Select Farmer..."
-                                filter
-                                showClear
-                                className="p-inputtext-lg"
-                                itemTemplate={(option) => (
-                                    <div className="flex align-items-center gap-2">
-                                        <i className="pi pi-user text-primary"></i>
-                                        <span className="font-medium">{option.name}</span>
-                                        <span className="text-500 text-sm ml-auto">{option.mobile || ''}</span>
-                                    </div>
-                                )}
-                            />
-                            {selectedParty && (
-                                <div className="mt-3 p-3 surface-50 border-round flex flex-column gap-1 text-sm">
-                                    <div className="flex justify-content-between">
-                                        <span className="text-500">Mobile:</span>
-                                        <span className="font-medium">{selectedParty.mobile || 'N/A'}</span>
-                                    </div>
-                                    <div className="flex justify-content-between">
-                                        <span className="text-500">City:</span>
-                                        <span className="font-medium">{selectedParty.city || 'N/A'}</span>
-                                    </div>
-                                    <div className="flex justify-content-between">
-                                        <span className="text-500">Current Balance:</span>
-                                        <span className={`font-bold ${selectedParty.balance < 0 ? 'text-red-500' : 'text-green-500'}`}>
-                                            ₹ {Math.abs(selectedParty.balance || 0).toFixed(2)}
-                                        </span>
-                                    </div>
+                {/* Left Column: Customer & Details */}
+                <div className="col-12 lg:col-8">
+                    <div className="flex flex-column gap-3 h-full">
+                        {/* Customer Card */}
+                        <div className="surface-card p-4 border-round shadow-1 h-full">
+                            <h2 className="text-lg font-bold mb-4 text-900 border-bottom-1 border-200 pb-2">Customer Details</h2>
+                            <div className="grid p-fluid">
+                                <div className="col-12 md:col-6">
+                                    <label className="font-medium mb-2 block text-700" htmlFor="farmer_select">
+                                        <i className="pi pi-user mr-2 text-primary"></i>Select Farmer / Customer
+                                    </label>
+                                    <Dropdown
+                                        inputId="farmer_select"
+                                        name="farmer_select"
+                                        value={selectedParty}
+                                        options={parties.filter(p => p.group_id === 1)}
+                                        optionLabel="name"
+                                        onChange={(e) => setSelectedParty(e.value)}
+                                        placeholder="Search Farmer..."
+                                        filter
+                                        showClear
+                                        className="w-full"
+                                        itemTemplate={(option) => (
+                                            <div className="flex align-items-center gap-2">
+                                                <i className="pi pi-user text-primary"></i>
+                                                <span className="font-medium">{option.name}</span>
+                                                <span className="text-500 text-sm ml-auto">{option.mobile || ''}</span>
+                                            </div>
+                                        )}
+                                    />
+                                    {selectedParty && (
+                                        <div className="mt-3 flex gap-3 text-sm">
+                                            <span className="bg-green-50 text-green-700 px-2 py-1 border-round font-medium">
+                                                <i className="pi pi-phone mr-1 text-xs"></i> {selectedParty.mobile || 'No Mobile'}
+                                            </span>
+                                            <span className="bg-blue-50 text-blue-700 px-2 py-1 border-round font-medium">
+                                                <i className="pi pi-map-marker mr-1 text-xs"></i> {selectedParty.city || 'No City'}
+                                            </span>
+                                            <span className={`px-2 py-1 border-round font-medium ${selectedParty.balance > 0 ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
+                                                <i className="pi pi-wallet mr-1 text-xs"></i> Bal: ₹{parseFloat(selectedParty.balance || 0).toFixed(2)}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                    </Card>
-                </div>
-
-                {/* Right: Invoice Info */}
-                <div className="col-12 md:col-5">
-                    <Card className="h-full border-1 surface-border shadow-none" title="Invoice Details">
-                        <div className="grid p-fluid">
-                            <div className="col-6">
-                                <label className="font-bold mb-2 block" htmlFor="bill_no_input">Bill No</label>
-                                <InputText id="bill_no_input" name="bill_no_input" value={billNo} disabled className="bg-surface-200 font-bold" />
-                            </div>
-                            <div className="col-6">
-                                <label className="font-bold mb-2 block" htmlFor="bill_date_input">Date</label>
-                                <Calendar inputId="bill_date_input" name="bill_date_input" value={billDate} onChange={(e) => setBillDate(e.value)} showIcon dateFormat="dd/mm/yy" />
-                            </div>
-                            <div className="col-12 mt-2">
-                                <span className="font-bold mb-2 block">Payment Mode</span>
-                                <div className="flex gap-2">
-                                    <Button
-                                        label="Cash"
-                                        icon="pi pi-money-bill"
-                                        severity={paymentMode === 'Cash' ? 'success' : 'secondary'}
-                                        variant={paymentMode === 'Cash' ? 'filled' : 'outlined'}
-                                        onClick={() => setPaymentMode('Cash')}
-                                        className="flex-1"
-                                    />
-                                    <Button
-                                        label="Debit"
-                                        icon="pi pi-wallet"
-                                        severity={paymentMode === 'Debit' ? 'warning' : 'secondary'}
-                                        variant={paymentMode === 'Debit' ? 'filled' : 'outlined'}
-                                        onClick={() => setPaymentMode('Debit')}
-                                        className="flex-1"
-                                    />
+                                <div className="col-12 md:col-3">
+                                    <label className="font-medium mb-2 block text-700" htmlFor="bill_no_input">Bill No</label>
+                                    <InputText id="bill_no_input" name="bill_no_input" value={billNo} disabled className="bg-gray-100 font-bold text-900" />
+                                </div>
+                                <div className="col-12 md:col-3">
+                                    <label className="font-medium mb-2 block text-700" htmlFor="bill_date_input">Date</label>
+                                    <Calendar inputId="bill_date_input" name="bill_date_input" value={billDate} onChange={(e) => setBillDate(e.value)} showIcon dateFormat="dd/mm/yy" className="w-full" />
                                 </div>
                             </div>
                         </div>
-                    </Card>
+                    </div>
                 </div>
-            </div>
 
-            {/* Items Table Section */}
-            <Card className="shadow-1 border-0">
-                <DataTable value={rows} dataKey="id" size="small" className="p-datatable-gridlines" showGridlines>
-                    <Column header="#" body={(d, { rowIndex }) => rowIndex + 1} style={{ width: '3rem', textAlign: 'center' }} />
-                    <Column header="Item Details" body={itemTemplate} style={{ minWidth: '250px' }} />
-                    <Column header="Unit" field="unit" style={{ width: '80px' }} />
-                    <Column header="Qty" body={qtyTemplate} style={{ width: '120px' }} />
-                    <Column header="Rate (₹)" body={rateTemplate} style={{ width: '120px' }} />
-                    <Column header="Amount (₹)" body={amountTemplate} className="text-right font-bold text-900 bg-blue-50" style={{ width: '150px' }} />
-                    <Column body={actionTemplate} style={{ width: '4rem', textAlign: 'center' }} />
-                </DataTable>
-
-                <div className="mt-3">
-                    <Button label="Add New Row" icon="pi pi-plus" onClick={addRow} outlined size="small" />
-                </div>
-            </Card>
-
-            {/* Footer / Totals Section */}
-            <div className="grid mt-2">
-                <div className="col-12 md:col-8">
-                    <Card className="shadow-none border-1 surface-border h-full">
-                        <label className="font-bold block mb-2" htmlFor="remarks_input">Remarks / Notes</label>
-                        <InputText id="remarks_input" name="remarks_input" value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Enter any notes about this bill..." className="w-full" />
-                    </Card>
-                </div>
-                <div className="col-12 md:col-4">
-                    <div className="surface-0 p-4 border-round shadow-2 h-full flex flex-column justify-content-between">
-                        <div className="flex flex-column gap-2 mb-4">
-                            <div className="flex justify-content-between text-lg">
-                                <span className="text-600">Sub Total</span>
-                                <span className="font-semibold">₹ {calculateTotal().toFixed(2)}</span>
+                {/* Right Column: Payment & Summary Preview */}
+                <div className="col-12 lg:col-4">
+                    <div className="surface-card p-4 border-round shadow-1 h-full flex flex-column justify-content-between">
+                        <div>
+                            <h2 className="text-lg font-bold mb-4 text-900 border-bottom-1 border-200 pb-2">Payment Details</h2>
+                            <div className="flex flex-column gap-3">
+                                <div>
+                                    <span className="font-medium mb-2 block text-700">Payment Mode</span>
+                                    <div className="flex p-selectbutton-row gap-2">
+                                        <Button
+                                            label="CASH"
+                                            icon="pi pi-money-bill"
+                                            className={`flex-1 ${paymentMode === 'Cash' ? 'bg-green-500 border-green-500' : 'p-button-outlined p-button-secondary'}`}
+                                            onClick={() => setPaymentMode('Cash')}
+                                        />
+                                        <Button
+                                            label="DEBIT"
+                                            icon="pi pi-id-card"
+                                            className={`flex-1 ${paymentMode === 'Debit' ? 'bg-orange-500 border-orange-500' : 'p-button-outlined p-button-secondary'}`}
+                                            onClick={() => setPaymentMode('Debit')}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="font-medium mb-2 block text-700" htmlFor="remarks_input">Remarks</label>
+                                    <InputText id="remarks_input" name="remarks_input" value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Note..." className="w-full" />
+                                </div>
                             </div>
-                            <div className="flex justify-content-between text-lg">
-                                <span className="text-600">Tax</span>
-                                <span>₹ 0.00</span>
-                            </div>
-                            <div className="separator border-top-1 border-300 my-2"></div>
-                            <div className="flex justify-content-between text-2xl font-bold text-primary">
-                                <span>Grand Total</span>
-                                <span>₹ {calculateTotal().toFixed(2)}</span>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-column gap-2">
-                            <Button label="Save & Print Bill" icon="pi pi-print" size="large" onClick={handleSave} />
-                            <Button label="Download PDF Only" icon="pi pi-file-pdf" severity="secondary" outlined onClick={handleDownloadPdf} disabled={!printData} />
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Hidden Components */}
-            <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+            {/* Items Grid - Full Width */}
+            <div className="surface-card p-4 border-round shadow-1">
+                <div className="flex justify-content-between align-items-center mb-3">
+                    <h2 className="text-lg font-bold m-0 text-900">Items List</h2>
+                    <Button label="Add Item" icon="pi pi-plus" size="small" onClick={addRow} />
+                </div>
+
+                <DataTable value={rows} dataKey="id" size="small" showGridlines stripedRows className="p-datatable-sm vertical-align-middle">
+                    <Column header="#" body={(d, { rowIndex }) => <span className="text-500">{rowIndex + 1}</span>} style={{ width: '3rem', textAlign: 'center' }} />
+                    <Column header="Product Name" body={itemTemplate} style={{ minWidth: '300px' }} />
+                    <Column header="Unit" field="unit" style={{ width: '100px' }} />
+                    <Column header="Qty" body={qtyTemplate} style={{ width: '120px' }} />
+                    <Column header="Rate" body={rateTemplate} style={{ width: '150px' }} />
+                    <Column header="Amount" body={amountTemplate} className="text-right bg-gray-50" style={{ width: '150px' }} />
+                    <Column body={actionTemplate} style={{ width: '50px', textAlign: 'center' }} />
+                </DataTable>
+            </div>
+
+            {/* Bottom Floating Bar for Totals */}
+            <div className="fixed bottom-0 left-0 right-0 surface-card p-3 shadow-8 border-top-1 border-200 z-5 flex flex-column md:flex-row justify-content-between align-items-center gap-3">
+                <div className="flex gap-4 align-items-center">
+                    <div className="text-right">
+                        <span className="block text-500 text-xs uppercase font-semibold">Total Qty</span>
+                        <span className="font-bold text-lg">{rows.reduce((sum, r) => sum + (parseFloat(r.qty) || 0), 0)}</span>
+                    </div>
+                    <div className="text-right pl-4 border-left-1 border-300">
+                        <span className="block text-500 text-xs uppercase font-semibold">Total Amount</span>
+                        <span className="text-2xl font-bold text-primary">₹ {calculateTotal().toFixed(2)}</span>
+                    </div>
+                </div>
+                <div className="flex gap-2">
+                    <Button label="Save & Print" icon="pi pi-print" size="large" onClick={handleSave} className="px-4 border-round-3xl" />
+                    <Button icon="pi pi-file-pdf" rounded outlined severity="secondary" onClick={handleDownloadPdf} tooltip="Download PDF" disabled={!printData} />
+                </div>
+            </div>
+
+            {/* Print Component (Hidden) */}
+            <div style={{ display: 'none' }}>
                 <SalesPrint ref={printRef} data={printData} />
             </div>
 
-            <Dialog header="Quick Create Item" visible={showQuickAdd} onHide={() => setShowQuickAdd(false)} style={{ width: '400px' }}>
-                <div className="flex flex-column gap-3">
-                    <div className="flex flex-column gap-2">
-                        <label htmlFor="qa_name">Item Name</label>
-                        <InputText id="qa_name" name="qa_name" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} autoFocus />
-                    </div>
-                    <div className="flex flex-column gap-2">
-                        <label htmlFor="qa_company">Company</label>
-                        <InputText id="qa_company" name="qa_company" value={newItem.company} onChange={(e) => setNewItem({ ...newItem, company: e.target.value })} />
-                    </div>
-                    <div className="flex flex-column gap-2">
-                        <label htmlFor="qa_unit">Unit</label>
-                        <Dropdown inputId="qa_unit" name="qa_unit" value={newItem.unit} options={['Nos', 'Kg', 'Box']} onChange={(e) => setNewItem({ ...newItem, unit: e.value })} />
-                    </div>
-                    <div className="flex flex-column gap-2">
-                        <label htmlFor="qa_rate">Rate</label>
-                        <InputNumber inputId="qa_rate" name="qa_rate" value={newItem.sales_rate} onValueChange={(e) => setNewItem({ ...newItem, sales_rate: e.value })} />
-                    </div>
-                    <Button label="Save" onClick={handleQuickAdd} />
+            {/* Quick Add Dialog */}
+            <Dialog header="Quick Add New Item" visible={showQuickAdd} onHide={() => setShowQuickAdd(false)} style={{ width: '400px' }} className="p-fluid">
+                <div className="field">
+                    <label htmlFor="qa_name">Item Name</label>
+                    <InputText id="qa_name" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} autoFocus />
                 </div>
+                <div className="field">
+                    <label htmlFor="qa_company">Company</label>
+                    <InputText id="qa_company" value={newItem.company} onChange={(e) => setNewItem({ ...newItem, company: e.target.value })} />
+                </div>
+                <div className="formgrid grid">
+                    <div className="field col">
+                        <label htmlFor="qa_unit">Unit</label>
+                        <Dropdown id="qa_unit" value={newItem.unit} options={['Nos', 'Kg', 'Box', 'Ltr']} onChange={(e) => setNewItem({ ...newItem, unit: e.value })} />
+                    </div>
+                    <div className="field col">
+                        <label htmlFor="qa_rate">Rate</label>
+                        <InputNumber id="qa_rate" value={newItem.sales_rate} onValueChange={(e) => setNewItem({ ...newItem, sales_rate: e.value })} mode="decimal" />
+                    </div>
+                </div>
+                <Button label="Add Item" icon="pi pi-check" onClick={handleQuickAdd} />
             </Dialog>
+
+            {/* Spacer for Bottom Bar */}
+            <div className="h-6rem w-full"></div>
         </div>
     );
 };

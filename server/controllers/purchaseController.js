@@ -33,6 +33,10 @@ exports.createPurchase = async (req, res) => {
             await connection.query('UPDATE items SET stock = stock + ? WHERE id = ?', [d.qty, d.item_id]);
         }
 
+        // Update Supplier Balance (We owe them, so balance increases)
+        // Assuming all Purchases are Credit for now, or we track 'Payable' as positive.
+        await connection.query('UPDATE accounts SET balance = balance + ? WHERE id = ?', [grand_total, account_id]);
+
         await connection.commit();
         res.status(201).json({ message: 'Purchase Bill Saved Successfully', purchase_id });
 

@@ -24,6 +24,21 @@ exports.createItem = async (req, res) => {
     }
 };
 
+// Update item
+exports.updateItem = async (req, res) => {
+    const { id } = req.params;
+    const { name, company, category, code, sales_rate, purchase_rate, gst_percent, unit, stock } = req.body;
+    try {
+        await db.query(
+            'UPDATE items SET name = ?, company = ?, category = ?, code = ?, sales_rate = ?, purchase_rate = ?, gst_percent = ?, unit = ?, stock = ? WHERE id = ?',
+            [name, company || '', category, code, sales_rate, purchase_rate, gst_percent, unit, stock, id]
+        );
+        res.json({ message: 'Item updated successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Search items
 exports.searchItems = async (req, res) => {
     const { query } = req.query;

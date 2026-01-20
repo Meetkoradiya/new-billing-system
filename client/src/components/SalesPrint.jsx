@@ -1,98 +1,158 @@
 import React, { forwardRef } from 'react';
-import '../index.css'; // Ensure styles are available
+import '../index.css';
 
 const SalesPrint = forwardRef(({ data }, ref) => {
     if (!data) return null;
 
-    const { bill_no, bill_date, party_name, items, sub_total, grand_total, remarks } = data;
+    const {
+        bill_no,
+        bill_date,
+        party_name,
+        party_mobile,
+        party_city,
+        items,
+        sub_total,
+        grand_total,
+        payment_mode
+    } = data;
 
-    // Helper to convert number to words (Indian numbering system simplified)
-    const numberToWords = (num) => {
-        // Basic implementation or placeholder
-        return num ? `${num} Only` : '';
+    // Number to words conversion
+    const numToWords = (n) => {
+        const num = Math.floor(n);
+        const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
+        const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+        const inWords = (num) => {
+            if ((num = num.toString()).length > 9) return 'overflow';
+            let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+            if (!n) return '';
+            let str = '';
+            str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
+            str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
+            str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
+            str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
+            str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + 'Only' : 'Only';
+            return str;
+        };
+        return inWords(num);
     };
 
+    const separatorStyle = { borderBottom: '1px dashed #000', margin: '10px 0' };
+
     return (
-        <div ref={ref} className="p-4" style={{ fontFamily: 'Arial, sans-serif', color: '#000', backgroundColor: '#fff' }}>
+        <div ref={ref} className="p-4" style={{ fontFamily: '"Courier New", Courier, monospace', color: '#000', backgroundColor: '#fff', fontSize: '14px', maxWidth: '100%' }}>
             {/* Header */}
-            <div className="flex justify-content-between align-items-center mb-4 border-bottom-1 pb-3">
-                <div>
-                    <h1 className="m-0 text-3xl font-bold text-primary">AGRO TALLY</h1>
-                    <p className="m-0 text-sm text-600">Smart Billing Solution</p>
-                    <p className="m-0 text-sm">123, Market Yard, City Name - 360001</p>
-                    <p className="m-0 text-sm">Mo: 98765 43210</p>
+            <div className="text-center mb-2">
+                <h1 className="m-0 text-3xl font-bold mb-1">PURUSARTH AGRO CENTER</h1>
+                <p className="m-0 font-bold mb-1" style={{ fontSize: '15px' }}>Sellers of Pesticides, Seeds & Pump Spare Parts</p>
+                <p className="m-0 mb-1">Opp. Kirti Pan, Ranjit Sagar Road, Jamnagar</p>
+                <p className="m-0 font-bold">Mo : 99252 59667</p>
+            </div>
+
+            <div style={separatorStyle}></div>
+
+            {/* Customer & Bill Details */}
+            <div className="flex justify-content-between">
+                <div style={{ width: '60%' }}>
+                    <div className="flex mb-1">
+                        <span style={{ width: '100px' }}>Bill No</span>
+                        <span>: {bill_no}</span>
+                    </div>
+                    <div className="flex mb-1">
+                        <span style={{ width: '100px' }}>Name</span>
+                        <span className="font-bold">: {party_name}</span>
+                    </div>
+                    <div className="flex mb-1">
+                        <span style={{ width: '100px' }}>Place</span>
+                        <span>: {party_city || ''}</span>
+                    </div>
                 </div>
-                <div className="text-right">
-                    <h2 className="m-0 text-xl font-bold">TAX INVOICE</h2>
-                    <p className="m-0 font-bold">Bill No: {bill_no}</p>
-                    <p className="m-0">Date: {new Date(bill_date).toLocaleDateString('en-IN')}</p>
+                <div style={{ width: '40%' }}>
+                    <div className="flex mb-1">
+                        <span style={{ width: '80px' }}>Date</span>
+                        <span>: {new Date(bill_date).toLocaleDateString('en-IN')}</span>
+                    </div>
+                    <div className="flex mb-1">
+                        <span style={{ width: '80px' }}>Mobile</span>
+                        <span>: {party_mobile || ''}</span>
+                    </div>
                 </div>
             </div>
 
-            {/* Parties */}
-            <div className="flex justify-content-between mb-4">
-                <div className="border-1 p-3 border-round w-6 mr-2">
-                    <p className="font-bold mb-1">Billed To (Party/Farmer):</p>
-                    <h3 className="m-0 text-lg">{party_name}</h3>
-                </div>
-            </div>
+            <div style={separatorStyle}></div>
 
-            {/* Items Table */}
-            <table className="w-full mb-4" style={{ borderCollapse: 'collapse' }}>
+            {/* Table */}
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                    <tr className="bg-blue-50">
-                        <th className="border-1 p-2 text-left">#</th>
-                        <th className="border-1 p-2 text-left">Item Name</th>
-                        <th className="border-1 p-2 text-right">Qty</th>
-                        <th className="border-1 p-2 text-right">Rate</th>
-                        <th className="border-1 p-2 text-right">Amount</th>
+                    <tr style={{ borderBottom: '1px dashed #000' }}>
+                        <th className="text-left p-1" style={{ width: '5%' }}>#</th>
+                        <th className="text-left p-1" style={{ width: '50%' }}>Item Name</th>
+                        <th className="text-right p-1" style={{ width: '10%' }}>Qty</th>
+                        <th className="text-right p-1" style={{ width: '15%' }}>Rate</th>
+                        <th className="text-right p-1" style={{ width: '20%' }}>Amount</th>
                     </tr>
                 </thead>
                 <tbody>
                     {items.map((item, index) => (
                         <tr key={index}>
-                            <td className="border-1 p-2">{index + 1}</td>
-                            <td className="border-1 p-2">{item.item_name}</td>
-                            <td className="border-1 p-2 text-right">{item.qty} {item.unit}</td>
-                            <td className="border-1 p-2 text-right">{parseFloat(item.rate).toFixed(2)}</td>
-                            <td className="border-1 p-2 text-right font-bold">{parseFloat(item.amount).toFixed(2)}</td>
+                            <td className="p-1 valign-top">{index + 1}</td>
+                            <td className="p-1 valign-top">{item.item_name}</td>
+                            <td className="p-1 text-right valign-top">{item.qty} {item.unit}</td>
+                            <td className="p-1 text-right valign-top">{parseFloat(item.rate).toFixed(2)}</td>
+                            <td className="p-1 text-right valign-top">{parseFloat(item.amount).toFixed(2)}</td>
                         </tr>
                     ))}
-                    {/* Fill empty rows if needed for layout height */}
-                    {items.length < 5 && Array.from({ length: 5 - items.length }).map((_, i) => (
-                        <tr key={`empty-${i}`}>
-                            <td className="border-1 p-2">&nbsp;</td>
-                            <td className="border-1 p-2"></td>
-                            <td className="border-1 p-2"></td>
-                            <td className="border-1 p-2"></td>
-                            <td className="border-1 p-2"></td>
-                        </tr>
-                    ))}
+                    {/* Fill empty rows for min-height look if needed, but not strictly asked */}
                 </tbody>
             </table>
 
+            <div style={separatorStyle}></div>
+
             {/* Totals */}
-            <div className="flex justify-content-end mb-4">
-                <div className="w-5">
-                    <div className="flex justify-content-between mb-1">
-                        <span>Sub Total:</span>
-                        <span className="font-bold">{parseFloat(sub_total).toFixed(2)}</span>
+            <div className="flex flex-column align-items-end">
+                <div className="flex justify-content-between mb-1" style={{ width: '250px' }}>
+                    <span>Sub Total :</span>
+                    <span>{parseFloat(sub_total).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-content-between mb-1" style={{ width: '250px' }}>
+                    <span>Discount :</span>
+                    <span>0.00</span>
+                </div>
+                <div style={{ borderBottom: '1px dashed #000', width: '250px', margin: '5px 0' }}></div>
+                <div className="flex justify-content-between mb-1 font-bold" style={{ width: '250px' }}>
+                    <span>Net Total :</span>
+                    <span>{parseFloat(grand_total).toFixed(2)}</span>
+                </div>
+            </div>
+
+            <div style={separatorStyle}></div>
+
+            {/* Payment & Footer */}
+            <div className="flex justify-content-between align-items-start">
+                <div>
+                    <p className="m-0 mb-1">Pay Mode : {payment_mode}</p>
+                    <p className="m-0 mt-3 font-italic font-bold">In Words: {numToWords(grand_total)}</p>
+                </div>
+                <div className="text-right">
+                    <div className="flex justify-content-between mb-1" style={{ width: '250px' }}>
+                        <span>Paid Amount :</span>
+                        <span>{parseFloat(grand_total).toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-content-between mb-1 border-bottom-1 pb-1">
-                        <span>Tax (0%):</span>
+                    <div className="flex justify-content-between mb-1" style={{ width: '250px' }}>
+                        <span>Balance :</span>
                         <span>0.00</span>
-                    </div>
-                    <div className="flex justify-content-between text-xl font-bold mt-2">
-                        <span>Grand Total:</span>
-                        <span>₹ {parseFloat(grand_total).toFixed(2)}</span>
                     </div>
                 </div>
             </div>
 
-            {/* Footer */}
-            <div className="mt-6 pt-4 border-top-1 text-center text-sm text-600">
-                <p>{remarks ? `Remarks: ${remarks}` : 'Thank you for your business!'}</p>
-                <p className="mt-4">Authorized Signature</p>
+            <div style={{ marginTop: '50px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                <div className="text-center">
+                    <p style={{ borderTop: '1px solid #000', paddingTop: '5px', width: '200px' }}>Receiver's Signature</p>
+                </div>
+                <div className="text-center">
+                    <p className="mb-6 font-bold">For, PURUSARTH AGRO CENTER</p>
+                    <p style={{ borderTop: '1px solid #000', paddingTop: '5px', width: '200px', marginLeft: 'auto' }}>Authorized Signatory</p>
+                </div>
             </div>
         </div>
     );

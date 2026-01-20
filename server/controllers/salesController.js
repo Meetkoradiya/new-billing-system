@@ -40,6 +40,11 @@ exports.createSale = async (req, res) => {
             await connection.query('UPDATE items SET stock = stock - ? WHERE id = ?', [d.qty, d.item_id]);
         }
 
+        // Update Party Balance if Debit
+        if (payment_mode === 'Debit') {
+            await connection.query('UPDATE accounts SET balance = balance + ? WHERE id = ?', [grand_total, account_id]);
+        }
+
         await connection.commit();
         res.status(201).json({ message: 'Bill Saved Successfully', sales_id });
 

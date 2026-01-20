@@ -5,7 +5,7 @@ const path = require('path');
 
 async function resetDb() {
     try {
-        const sqlPath = path.join(__dirname, '../database/schema_updates.sql');
+        const sqlPath = path.join(__dirname, '../database/full_schema.sql');
         const sql = fs.readFileSync(sqlPath, 'utf8');
 
         // Connect without database selected initially to allow DROP DATABASE
