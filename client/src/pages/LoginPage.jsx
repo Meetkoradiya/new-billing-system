@@ -136,7 +136,7 @@ const LoginPage = ({ setAuth }) => {
 
                             <div className="flex flex-column gap-2">
                                 <div className="flex justify-content-between align-items-center">
-                                    <label htmlFor="password" class="text-900 font-medium text-sm">Password</label>
+                                    <label htmlFor="password" className="text-900 font-medium text-sm">Password</label>
                                     <a href="#" className="text-primary hover:text-primary-dark text-sm font-medium no-underline transition-colors">Forgot password?</a>
                                 </div>
                                 <span className="p-input-icon-left w-full">
@@ -148,6 +148,7 @@ const LoginPage = ({ setAuth }) => {
                                         onChange={(e) => setPassword(e.target.value)}
                                         className="w-full"
                                         placeholder="••••••••"
+                                        autoComplete="current-password"
                                     />
                                 </span>
                             </div>
