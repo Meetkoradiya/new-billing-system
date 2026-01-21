@@ -7,7 +7,10 @@ exports.getStockSummary = async (req, res) => {
                 i.id,
                 i.name as item_name,
                 i.unit,
+                i.purchase_rate,
+                i.sales_rate,
                 IFNULL(curr_stock.stock, 0) as current_stock,
+                (IFNULL(curr_stock.stock, 0) * i.purchase_rate) as stock_value,
                 IFNULL(p.total_purchased, 0) as total_purchased,
                 IFNULL(s.total_sold, 0) as total_sold
             FROM items i

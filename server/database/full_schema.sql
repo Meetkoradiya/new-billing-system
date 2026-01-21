@@ -6,9 +6,9 @@ DROP DATABASE IF EXISTS agro_billing;
 CREATE DATABASE IF NOT EXISTS agro_billing;
 USE agro_billing;
 
--- 1. USERS
-DROP TABLE IF EXISTS users;
-CREATE TABLE users (
+-- 1. USERS (renamed to app_users to avoid corruption issues in dev environment)
+DROP TABLE IF EXISTS app_users;
+CREATE TABLE app_users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
-INSERT INTO users (username, password, role) VALUES ('admin', 'admin123', 'admin');
+INSERT INTO app_users (username, password, role) VALUES ('admin', 'admin123', 'admin');
 
 -- 2. ACCOUNTS
 DROP TABLE IF EXISTS accounts;

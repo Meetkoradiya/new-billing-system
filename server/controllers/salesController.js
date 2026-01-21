@@ -80,3 +80,28 @@ exports.getAllSales = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+// Get Sale By ID (with details)
+exports.getSaleById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [head] = await db.query(`
+            SELECT s.*, a.name as party_name, a.mobile, a.address 
+            FROM sales_head s 
+            JOIN accounts a ON s.account_id = a.id 
+            WHERE s.id = ?`, [id]
+        );
+
+        if (head.length === 0) return res.status(404).json({ message: 'Bill not found' });
+
+        const [items] = await db.query(`
+            SELECT d.*, i.name as item_name, i.unit 
+            FROM sales_detail d 
+            JOIN items i ON d.item_id = i.id 
+            WHERE d.sales_id = ?`, [id]
+        );
+
+        res.json({ ...head[0], items });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

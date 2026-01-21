@@ -201,9 +201,10 @@ const ItemMaster = () => {
                             inputId="itemUnit"
                             name="itemUnit"
                             value={formData.unit}
-                            options={['Nos', 'Kg', 'Ltr', 'Box', 'Bag']}
+                            options={['5ltr', '1ltr', '500ml', '1200ml', '5kg', '1kg', '850gm', '250gm', '150gm', '450gm', '100gm', '60gm', '8gm', 'Nos', 'Bag', 'Box', 'Pkt']}
                             onChange={(e) => setFormData({ ...formData, unit: e.value })}
                             placeholder="Select Unit"
+                            editable
                         />
                     </div>
                     <div className="col-12 md:col-6">

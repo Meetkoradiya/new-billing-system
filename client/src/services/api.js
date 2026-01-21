@@ -9,6 +9,7 @@ const api = axios.create({
 export const getAccounts = () => api.get('/accounts');
 export const createAccount = (data) => api.post('/accounts', data);
 export const searchAccounts = (query) => api.get(`/accounts/search?query=${query}`);
+export const deleteAccount = (id) => api.delete(`/accounts/${id}`);
 
 export const getItems = () => api.get('/items');
 export const createItem = (data) => api.post('/items', data);
@@ -19,6 +20,7 @@ export const deleteItem = (id) => api.delete(`/items/${id}`);
 
 export const createSale = (data) => api.post('/sales', data);
 export const getSales = () => api.get('/sales');
+export const getSaleById = (id) => api.get(`/sales/${id}`);
 
 export const createPurchase = (data) => api.post('/purchase', data);
 export const getPurchases = () => api.get('/purchase');
@@ -26,5 +28,6 @@ export const getPurchases = () => api.get('/purchase');
 export const createReceipt = (data) => api.post('/payments/receipt', data);
 export const createPayment = (data) => api.post('/payments/payment', data);
 export const getPayments = () => api.get('/payments');
+export const getStockSummary = () => api.get('/reports/stock');
 
 export default api;

@@ -55,16 +55,31 @@ const PurchaseBill = () => {
         loadMasters();
     }, []);
 
+    const [errorMsg, setErrorMsg] = useState(null);
+
     const loadMasters = async () => {
+        setErrorMsg(null);
         try {
             const accRes = await getAccounts();
-            const itemRes = await getItems();
-            setParties(accRes.data);
-            setProductList(itemRes.data);
-            if (!billNo) setBillNo(`PB-${Math.floor(Math.random() * 10000)}`);
+            if (accRes.data) {
+                setParties(accRes.data);
+            }
         } catch (error) {
-            console.error('Error loading masters', error);
+            console.error('Error loading parties:', error);
+            setErrorMsg(`Failed to load parties: ${error.message}`);
         }
+
+        try {
+            const itemRes = await getItems();
+            if (itemRes.data) {
+                setProductList(itemRes.data);
+            }
+        } catch (error) {
+            console.error('Error loading items:', error);
+            // Don't block UI if just items fail, but maybe warn
+        }
+
+        if (!billNo) setBillNo(`PB-${Math.floor(Math.random() * 10000)}`);
     };
 
     const handleRowChange = (index, field, value) => {
@@ -291,7 +306,17 @@ const PurchaseBill = () => {
     return (
         <div className="surface-card p-4 shadow-2 border-round">
             <Toast ref={toast} />
-            <h2 className="text-2xl font-bold mb-4">Purchase Entry</h2>
+            <div className="flex justify-content-between align-items-center mb-4">
+                <h2 className="text-2xl font-bold m-0">Purchase Entry</h2>
+                <Button icon="pi pi-refresh" rounded text aria-label="Refresh" onClick={loadMasters} tooltip="Reload Data" />
+            </div>
+
+            {errorMsg && (
+                <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+                    <p className="font-bold">Error</p>
+                    <p>{errorMsg}</p>
+                </div>
+            )}
 
             <div className="grid p-fluid">
                 <div className="col-12 md:col-4">
@@ -303,15 +328,20 @@ const PurchaseBill = () => {
                     <Calendar inputId="pb_billDate" name="pb_billDate" value={billDate} onChange={(e) => setBillDate(e.value)} showIcon />
                 </div>
                 <div className="col-12 md:col-4">
-                    <label htmlFor="pb_party" className="block mb-2 font-bold">Company / Supplier</label>
+                    <label htmlFor="pb_party" className="block mb-2 font-bold">
+                        Company / Supplier
+                        <span className="text-secondary font-normal ml-2 text-sm">
+                            (Available: {parties.filter(p => p.group_id == 2).length})
+                        </span>
+                    </label>
                     <Dropdown
                         inputId="pb_party"
                         name="pb_party"
                         value={selectedParty}
-                        options={parties.filter(p => p.group_id === 2)}
+                        options={parties.filter(p => p.group_id == 2)}
                         optionLabel="name"
                         onChange={(e) => setSelectedParty(e.value)}
-                        placeholder="Select Company"
+                        placeholder="Select Company (Supplier)"
                         filter
                         className="w-full"
                         itemTemplate={(option) => (
@@ -406,8 +436,22 @@ const PurchaseBill = () => {
                 </div>
             </Dialog>
 
-            {/* Hidden Print Component */}
-            <div style={{ display: 'none' }}>
+            {/* Debug Info: Remove in production */}
+            <div className="mt-8 p-4 bg-gray-100 border-round text-xs font-mono text-gray-500">
+                <p>Debug Info:</p>
+                <p>Total Parties Loaded: {parties.length}</p>
+                <p>Suppliers (Group 2): {parties.filter(p => p.group_id == 2).length}</p>
+                <details>
+                    <summary>Show Raw Data (First 2)</summary>
+                    <pre>{JSON.stringify(parties.slice(0, 2), null, 2)}</pre>
+                </details>
+            </div>
+
+            {/* 
+                We place this fixed at 0,0 with negative z-index so it is "visible" to html2canvas 
+                but hidden from the user. "visibility: hidden" causes blank screenshots.
+            */}
+            <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -1000, opacity: 0 }}>
                 <PurchasePrint ref={printRef} data={printData} />
             </div>
         </div>

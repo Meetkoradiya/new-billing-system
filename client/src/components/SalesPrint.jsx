@@ -37,122 +37,104 @@ const SalesPrint = forwardRef(({ data }, ref) => {
         return inWords(num);
     };
 
-    const separatorStyle = { borderBottom: '1px dashed #000', margin: '10px 0' };
-
     return (
-        <div ref={ref} className="p-4" style={{ fontFamily: '"Courier New", Courier, monospace', color: '#000', backgroundColor: '#fff', fontSize: '14px', maxWidth: '100%' }}>
-            {/* Header */}
-            <div className="text-center mb-2">
-                <h1 className="m-0 text-3xl font-bold mb-1">PURUSARTH AGRO CENTER</h1>
-                <p className="m-0 font-bold mb-1" style={{ fontSize: '15px' }}>Sellers of Pesticides, Seeds & Pump Spare Parts</p>
-                <p className="m-0 mb-1">Opp. Kirti Pan, Ranjit Sagar Road, Jamnagar</p>
-                <p className="m-0 font-bold">Mo : 99252 59667</p>
-            </div>
+        <div ref={ref} className="print-container" style={{
+            fontFamily: 'Arial, sans-serif',
+            color: '#1f2937',
+            backgroundColor: '#fff',
+            fontSize: '14px',
+            width: '210mm',
+            minHeight: '297mm',
+            margin: '0 auto',
+            padding: '20px',
+            boxSizing: 'border-box'
+        }}>
+            {/* Main Outer Border Box */}
+            <div style={{ border: '2px solid #1f2937', height: '100%', position: 'relative' }}>
 
-            <div style={separatorStyle}></div>
+                {/* Header Section */}
+                <div style={{ textAlign: 'center', padding: '30px 20px', borderBottom: '2px solid #1f2937' }}>
+                    <h1 style={{ margin: '0 0 10px 0', fontSize: '32px', fontWeight: '900', color: '#111827', textTransform: 'uppercase', letterSpacing: '1px' }}>PURUSARTH AGRO CENTER</h1>
+                    <p style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '700', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.5px' }}>SELLERS OF PESTICIDES, SEEDS & PUMP SPARE PARTS</p>
+                    <p style={{ margin: '0 0 5px 0', fontSize: '14px', color: '#374151' }}>Opp. Kirti Pan, Ranjit Sagar Road, Jamnagar</p>
+                    <p style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#111827' }}>Mo: 99252 59667</p>
+                </div>
 
-            {/* Customer & Bill Details */}
-            <div className="flex justify-content-between">
-                <div style={{ width: '60%' }}>
-                    <div className="flex mb-1">
-                        <span style={{ width: '100px' }}>Bill No</span>
-                        <span>: {bill_no}</span>
+                {/* Bill Info Section (Split) */}
+                <div style={{ display: 'flex', borderBottom: '2px solid #1f2937' }}>
+                    {/* Left: Billed To */}
+                    <div style={{ flex: '1', padding: '20px', borderRight: '2px solid #1f2937' }}>
+                        <p style={{ margin: '0 0 10px 0', fontSize: '12px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase' }}>BILLED TO:</p>
+                        <h2 style={{ margin: '0 0 5px 0', fontSize: '18px', fontWeight: '800', color: '#111827' }}>{party_name}</h2>
+                        {party_city && <p style={{ margin: '0', fontSize: '14px', color: '#374151', lineHeight: '1.4' }}>{party_city}</p>}
+                        {party_mobile && <p style={{ margin: '0', fontSize: '14px', color: '#374151' }}>Mo: {party_mobile}</p>}
                     </div>
-                    <div className="flex mb-1">
-                        <span style={{ width: '100px' }}>Name</span>
-                        <span className="font-bold">: {party_name}</span>
-                    </div>
-                    <div className="flex mb-1">
-                        <span style={{ width: '100px' }}>Place</span>
-                        <span>: {party_city || ''}</span>
+
+                    {/* Right: Invoice No & Date */}
+                    <div style={{ width: '35%', padding: '20px', backgroundColor: '#f9fafb' }}>
+                        <div style={{ marginBottom: '15px' }}>
+                            <p style={{ margin: '0 0 2px 0', fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>INVOICE NO.</p>
+                            <p style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: '#111827' }}>{bill_no}</p>
+                        </div>
+                        <div>
+                            <p style={{ margin: '0 0 2px 0', fontSize: '11px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase' }}>DATE</p>
+                            <p style={{ margin: 0, fontSize: '16px', color: '#111827' }}>{new Date(bill_date).toLocaleDateString('en-IN')}</p>
+                        </div>
                     </div>
                 </div>
-                <div style={{ width: '40%' }}>
-                    <div className="flex mb-1">
-                        <span style={{ width: '80px' }}>Date</span>
-                        <span>: {new Date(bill_date).toLocaleDateString('en-IN')}</span>
-                    </div>
-                    <div className="flex mb-1">
-                        <span style={{ width: '80px' }}>Mobile</span>
-                        <span>: {party_mobile || ''}</span>
-                    </div>
-                </div>
-            </div>
 
-            <div style={separatorStyle}></div>
-
-            {/* Table */}
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                    <tr style={{ borderBottom: '1px dashed #000' }}>
-                        <th className="text-left p-1" style={{ width: '5%' }}>#</th>
-                        <th className="text-left p-1" style={{ width: '50%' }}>Item Name</th>
-                        <th className="text-right p-1" style={{ width: '10%' }}>Qty</th>
-                        <th className="text-right p-1" style={{ width: '15%' }}>Rate</th>
-                        <th className="text-right p-1" style={{ width: '20%' }}>Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {items.map((item, index) => (
-                        <tr key={index}>
-                            <td className="p-1 valign-top">{index + 1}</td>
-                            <td className="p-1 valign-top">{item.item_name}</td>
-                            <td className="p-1 text-right valign-top">{item.qty} {item.unit}</td>
-                            <td className="p-1 text-right valign-top">{parseFloat(item.rate).toFixed(2)}</td>
-                            <td className="p-1 text-right valign-top">{parseFloat(item.amount).toFixed(2)}</td>
+                {/* Items Table */}
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                        <tr style={{ backgroundColor: '#f3f4f6', borderBottom: '1px solid #e5e7eb' }}>
+                            <th style={{ padding: '12px 15px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#4b5563', textTransform: 'uppercase', width: '8%' }}>NO.</th>
+                            <th style={{ padding: '12px 15px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#4b5563', textTransform: 'uppercase', width: '45%' }}>ITEM DESCRIPTION</th>
+                            <th style={{ padding: '12px 15px', textAlign: 'right', fontSize: '12px', fontWeight: '700', color: '#4b5563', textTransform: 'uppercase', width: '15%' }}>QTY</th>
+                            <th style={{ padding: '12px 15px', textAlign: 'right', fontSize: '12px', fontWeight: '700', color: '#4b5563', textTransform: 'uppercase', width: '15%' }}>RATE</th>
+                            <th style={{ padding: '12px 15px', textAlign: 'right', fontSize: '12px', fontWeight: '700', color: '#4b5563', textTransform: 'uppercase', width: '17%' }}>AMOUNT</th>
                         </tr>
-                    ))}
-                    {/* Fill empty rows for min-height look if needed, but not strictly asked */}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {items.map((item, index) => (
+                            <tr key={index} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                                <td style={{ padding: '12px 15px', fontSize: '14px', color: '#6b7280' }}>{index + 1}</td>
+                                <td style={{ padding: '12px 15px', fontSize: '14px', color: '#111827', fontWeight: '500' }}>{item.item_name}</td>
+                                <td style={{ padding: '12px 15px', fontSize: '14px', textAlign: 'right', color: '#374151' }}>{item.qty} {item.unit}</td>
+                                <td style={{ padding: '12px 15px', fontSize: '14px', textAlign: 'right', color: '#374151' }}>{parseFloat(item.rate).toFixed(2)}</td>
+                                <td style={{ padding: '12px 15px', fontSize: '14px', textAlign: 'right', fontWeight: '700', color: '#111827' }}>{parseFloat(item.amount).toFixed(2)}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
 
-            <div style={separatorStyle}></div>
-
-            {/* Totals */}
-            <div className="flex flex-column align-items-end">
-                <div className="flex justify-content-between mb-1" style={{ width: '250px' }}>
-                    <span>Sub Total :</span>
-                    <span>{parseFloat(sub_total).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-content-between mb-1" style={{ width: '250px' }}>
-                    <span>Discount :</span>
-                    <span>0.00</span>
-                </div>
-                <div style={{ borderBottom: '1px dashed #000', width: '250px', margin: '5px 0' }}></div>
-                <div className="flex justify-content-between mb-1 font-bold" style={{ width: '250px' }}>
-                    <span>Net Total :</span>
-                    <span>{parseFloat(grand_total).toFixed(2)}</span>
-                </div>
-            </div>
-
-            <div style={separatorStyle}></div>
-
-            {/* Payment & Footer */}
-            <div className="flex justify-content-between align-items-start">
-                <div>
-                    <p className="m-0 mb-1">Pay Mode : {payment_mode}</p>
-                    <p className="m-0 mt-3 font-italic font-bold">In Words: {numToWords(grand_total)}</p>
-                </div>
-                <div className="text-right">
-                    <div className="flex justify-content-between mb-1" style={{ width: '250px' }}>
-                        <span>Paid Amount :</span>
-                        <span>{parseFloat(grand_total).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-content-between mb-1" style={{ width: '250px' }}>
-                        <span>Balance :</span>
-                        <span>0.00</span>
+                {/* Totals Section at Bottom */}
+                <div style={{ padding: '20px 30px', borderTop: '2px solid #1f2937', marginTop: 'auto', display: 'flex', justifyContent: 'flex-end', backgroundColor: '#fff' }}>
+                    <div style={{ width: '250px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                            <span style={{ fontSize: '14px', color: '#6b7280' }}>Sub Total</span>
+                            <span style={{ fontSize: '14px', fontWeight: '600' }}>{parseFloat(sub_total).toFixed(2)}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '16px', fontWeight: '800', color: '#111827' }}>Total</span>
+                            <span style={{ fontSize: '20px', fontWeight: '900', color: '#111827' }}>₹{parseFloat(grand_total).toFixed(2)}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div style={{ marginTop: '50px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                <div className="text-center">
-                    <p style={{ borderTop: '1px solid #000', paddingTop: '5px', width: '200px' }}>Receiver's Signature</p>
+                {/* Signatures & Footer (Absolute bottom of the border box) */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '0 30px 30px 30px', marginTop: '40px' }}>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ borderBottom: '1px solid #9ca3af', width: '150px', marginBottom: '8px' }}></div>
+                        <p style={{ margin: 0, fontSize: '12px', color: '#6b7280', textTransform: 'uppercase' }}>Receiver's Signature</p>
+                    </div>
+
+                    <div style={{ textAlign: 'center' }}>
+                        <p style={{ margin: '0 0 40px 0', fontSize: '12px', fontWeight: '700', color: '#111827' }}>For, PURUSARTH AGRO CENTER</p>
+                        <div style={{ borderBottom: '1px solid #9ca3af', width: '150px', marginBottom: '8px' }}></div>
+                        <p style={{ margin: 0, fontSize: '12px', color: '#6b7280', textTransform: 'uppercase' }}>Authorized Signatory</p>
+                    </div>
                 </div>
-                <div className="text-center">
-                    <p className="mb-6 font-bold">For, PURUSARTH AGRO CENTER</p>
-                    <p style={{ borderTop: '1px solid #000', paddingTop: '5px', width: '200px', marginLeft: 'auto' }}>Authorized Signatory</p>
-                </div>
+
             </div>
         </div>
     );

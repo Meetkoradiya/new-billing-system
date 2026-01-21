@@ -9,7 +9,7 @@ exports.login = async (req, res) => {
     }
 
     try {
-        const [rows] = await db.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, password]);
+        const [rows] = await db.query('SELECT * FROM app_users WHERE username = ? AND password = ?', [username, password]);
 
         if (rows.length > 0) {
             const user = rows[0];
