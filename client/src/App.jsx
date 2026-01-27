@@ -77,15 +77,7 @@ const SidebarContent = ({ closeSidebar }) => (
       </div>
     </div>
 
-    <div className="p-3 border-top-1 border-100 mx-3 mb-2">
-      <div className="surface-100 p-3 border-round border-1 border-200 flex align-items-center gap-3">
-        <Avatar label="A" shape="circle" className="bg-primary text-white" />
-        <div className="flex flex-column overflow-hidden">
-          <span className="text-sm font-bold text-900 text-overflow-ellipsis white-space-nowrap">Admin User</span>
-          <span className="text-xs text-500">v1.2.0</span>
-        </div>
-      </div>
-    </div>
+    
   </div>
 );
 
