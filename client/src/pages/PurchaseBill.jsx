@@ -442,7 +442,7 @@ const PurchaseBill = () => {
                 <p>Total Parties Loaded: {parties.length}</p>
                 <p>Suppliers (Group 2): {parties.filter(p => p.group_id == 2).length}</p>
                 <details>
-                    <summary>Show Raw Data (First 2)</summary>
+                    <summary>Show Raw Data (First 1)</summary>
                     <pre>{JSON.stringify(parties.slice(0, 2), null, 2)}</pre>
                 </details>
             </div>
